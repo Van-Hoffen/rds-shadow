@@ -1,0 +1,11 @@
+# Build output
+/target
+**/*.rs.bk
+
+# Local configuration: never commit real hosts, brokers or group names
+rds-shadow.ini
+*.local.ini
+
+# Audit output
+*.jsonl
+logs/

@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/rds-shadow-core",
+    "crates/rds-shadow-audit",
+    "crates/rds-shadow",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "UNLICENSED"
+repository = "https://github.com/Van-Hoffen/rds-shadow"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+thiserror = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Project-only default. Does NOT change global default_agent.
+  // Living projects (pmb-orchestrator, 1c-orchestrator) keep their own files.
+  "default_agent": "pm-orchestrator"
+}
