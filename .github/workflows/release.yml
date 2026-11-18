@@ -13,7 +13,7 @@ jobs:
     name: Windows x64
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Build
@@ -27,7 +27,7 @@ jobs:
           Copy-Item target/release/rds-shadow-audit.exe "dist/$name/"
           Copy-Item docs/architecture/rds-shadow.example.ini "dist/$name/"
           Compress-Archive -Path "dist/$name/*" -DestinationPath "dist/$name.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rds-shadow-windows-x64
           path: dist/rds-shadow-windows-x64.zip
@@ -36,7 +36,7 @@ jobs:
     name: Linux x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Build viewer
@@ -47,7 +47,7 @@ jobs:
           mkdir -p "dist/$name"
           cp target/release/rds-shadow-audit "dist/$name/"
           tar -C dist -czf "dist/$name.tar.gz" "$name"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rds-shadow-audit-linux-x64
           path: dist/rds-shadow-audit-linux-x64.tar.gz
@@ -57,7 +57,7 @@ jobs:
     needs: [windows, linux]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -82,7 +82,7 @@ jobs:
           cargo clippy --workspace --all-targets -- -D warnings
           cargo test --workspace
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -90,7 +90,7 @@ jobs:
       - name: List artifacts
         run: ls -l dist
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/rds-shadow-windows-x64.zip
