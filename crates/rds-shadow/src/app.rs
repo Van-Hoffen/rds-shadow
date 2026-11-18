@@ -8,10 +8,21 @@ use rds_shadow_core::event::{ActionMode, AuditEvent, EventKind, ResultKind};
 
 use crate::audit;
 use crate::platform;
+use crate::rights::{self, Perm, PermAccount};
 
 enum AppEvent {
     Sessions(Vec<platform::Session>, Vec<String>),
     Status(String),
+    Perms(Vec<PermAccount>, Option<String>),
+}
+
+struct PermEditor {
+    open: bool,
+    server: String,
+    accounts: Vec<PermAccount>,
+    new_group: String,
+    error: Option<String>,
+    loaded: bool,
 }
 
 enum Dialog {
@@ -39,6 +50,7 @@ pub struct App {
     member_view: bool,
     member_control: bool,
     member_logoff: bool,
+    perm_editor: Option<PermEditor>,
 }
 
 impl App {
@@ -63,6 +75,7 @@ impl App {
             member_view: false,
             member_control: false,
             member_logoff: false,
+            perm_editor: None,
         };
         if std::path::Path::new(&app.cfg_path).is_file() {
             app.load_config();
@@ -178,6 +191,13 @@ impl App {
                 AppEvent::Status(text) => {
                     self.shadow_running = false;
                     self.status = text;
+                }
+                AppEvent::Perms(accounts, error) => {
+                    if let Some(ed) = &mut self.perm_editor {
+                        ed.accounts = accounts;
+                        ed.error = error;
+                        ed.loaded = true;
+                    }
                 }
             }
         }
@@ -535,6 +555,185 @@ impl App {
         }
         self.dialog = dialog;
     }
+
+    fn open_perm_editor(&mut self) {
+        let server = self
+            .selected_session()
+            .map(|s| s.server.clone())
+            .or_else(|| self.cfg.as_ref().and_then(|c| c.servers.first().cloned()))
+            .unwrap_or_default();
+        self.perm_editor = Some(PermEditor {
+            open: true,
+            server,
+            accounts: Vec::new(),
+            new_group: String::new(),
+            error: None,
+            loaded: false,
+        });
+        self.load_perms();
+    }
+
+    fn load_perms(&mut self) {
+        let Some(ed) = &self.perm_editor else {
+            return;
+        };
+        let server = ed.server.clone();
+        let tx = self.tx.clone();
+        thread::spawn(move || match rights::list_accounts(&server) {
+            Ok(accounts) => {
+                let _ = tx.send(AppEvent::Perms(accounts, None));
+            }
+            Err(e) => {
+                let _ = tx.send(AppEvent::Perms(Vec::new(), Some(e)));
+            }
+        });
+    }
+
+    fn draw_perm_editor(&mut self, ctx: &egui::Context) {
+        let mut ed = match self.perm_editor.take() {
+            Some(ed) => ed,
+            None => return,
+        };
+        if !ed.open {
+            return;
+        }
+
+        let l_server = self.t("Сервер", "Server").to_string();
+        let l_refresh = self.t("Обновить", "Refresh").to_string();
+        let l_group = self
+            .t("Группа / учётная запись", "Group / account")
+            .to_string();
+        let l_query = self.t("Информация", "Query").to_string();
+        let l_remote = self.t("Управление", "Remote control").to_string();
+        let l_msg = self.t("Сообщение", "Message").to_string();
+        let l_logoff = self.t("Завершение", "Logoff").to_string();
+        let l_new = self.t("Добавить группу", "Add group").to_string();
+        let l_note = self
+            .t(
+                "Требуются права администратора на сервере (WMI).",
+                "Requires admin rights on the server (WMI).",
+            )
+            .to_string();
+
+        let mut toggles: Vec<(usize, Perm, bool)> = Vec::new();
+        let mut reload = false;
+        let mut add_group: Option<String> = None;
+        let snapshot: Vec<(String, String, u32)> = ed
+            .accounts
+            .iter()
+            .map(|a| (a.name.clone(), a.sid.clone(), a.mask))
+            .collect();
+
+        egui::Window::new(self.t("Права RDP-Tcp", "RDP-Tcp rights"))
+            .collapsible(false)
+            .resizable(true)
+            .default_width(640.0)
+            .open(&mut ed.open)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(&l_server);
+                    ui.add(egui::TextEdit::singleline(&mut ed.server).desired_width(200.0));
+                    if ui.button(&l_refresh).clicked() {
+                        reload = true;
+                    }
+                });
+                ui.label(&l_note);
+                if let Some(err) = &ed.error {
+                    ui.colored_label(egui::Color32::from_rgb(220, 90, 90), err);
+                }
+
+                ui.horizontal(|ui| {
+                    ui.strong(&l_group);
+                    ui.separator();
+                    ui.strong(&l_query);
+                    ui.strong(&l_remote);
+                    ui.strong(&l_msg);
+                    ui.strong(&l_logoff);
+                });
+                ui.separator();
+
+                egui::ScrollArea::vertical()
+                    .max_height(360.0)
+                    .show(ui, |ui| {
+                        for (i, (name, sid, mask)) in snapshot.iter().enumerate() {
+                            let mut q = mask & Perm::Query.bit() != 0;
+                            let mut s = mask & Perm::Shadow.bit() != 0;
+                            let mut m = mask & Perm::Message.bit() != 0;
+                            let mut lf = mask & Perm::Logoff.bit() != 0;
+                            ui.horizontal(|ui| {
+                                ui.label(format!(
+                                    "{name} ({})",
+                                    if sid.is_empty() { "-" } else { sid }
+                                ));
+                                if ui.checkbox(&mut q, "").changed() {
+                                    toggles.push((i, Perm::Query, q));
+                                }
+                                if ui.checkbox(&mut s, "").changed() {
+                                    toggles.push((i, Perm::Shadow, s));
+                                }
+                                if ui.checkbox(&mut m, "").changed() {
+                                    toggles.push((i, Perm::Message, m));
+                                }
+                                if ui.checkbox(&mut lf, "").changed() {
+                                    toggles.push((i, Perm::Logoff, lf));
+                                }
+                            });
+                        }
+                    });
+
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label(&l_new);
+                    ui.add(
+                        egui::TextEdit::singleline(&mut ed.new_group)
+                            .hint_text("DOMAIN\\Group")
+                            .desired_width(240.0),
+                    );
+                    if ui.button(self.t("Добавить", "Add")).clicked() {
+                        let g = ed.new_group.trim().to_string();
+                        if !g.is_empty() {
+                            add_group = Some(g);
+                        }
+                    }
+                });
+            });
+
+        for (i, perm, allow) in toggles {
+            let name = ed.accounts[i].name.clone();
+            match rights::set_permission(&ed.server, &name, perm, allow) {
+                Ok(()) => {
+                    let bit = perm.bit();
+                    if allow {
+                        ed.accounts[i].mask |= bit;
+                    } else {
+                        ed.accounts[i].mask &= !bit;
+                    }
+                }
+                Err(e) => {
+                    ed.error = Some(e);
+                }
+            }
+        }
+
+        if let Some(group) = add_group {
+            match rights::add_account(&ed.server, &group) {
+                Ok(()) => {
+                    ed.new_group.clear();
+                    reload = true;
+                }
+                Err(e) => {
+                    ed.error = Some(e);
+                }
+            }
+        }
+
+        if reload {
+            self.perm_editor = Some(ed);
+            self.load_perms();
+        } else {
+            self.perm_editor = Some(ed);
+        }
+    }
 }
 
 impl eframe::App for App {
@@ -565,6 +764,13 @@ impl eframe::App for App {
                 }
                 if ui.button(if self.lang_ru { "EN" } else { "RU" }).clicked() {
                     self.lang_ru = !self.lang_ru;
+                }
+                ui.separator();
+                if ui
+                    .button(self.t("Права RDP-Tcp", "RDP-Tcp rights"))
+                    .clicked()
+                {
+                    self.open_perm_editor();
                 }
             });
             ui.horizontal(|ui| {
@@ -739,6 +945,7 @@ impl eframe::App for App {
         });
 
         self.draw_dialogs(&ctx);
+        self.draw_perm_editor(&ctx);
 
         if self.refreshing || self.shadow_running {
             ctx.request_repaint_after(Duration::from_millis(300));

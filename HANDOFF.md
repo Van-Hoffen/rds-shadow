@@ -1,7 +1,7 @@
 # Handoff: RDS Shadow
 
-- **Date:** 2026-11-18 10:50 UTC
-- **Status:** repo bootstrapped; CI green; GUI client added; `v0.1.0`/`v0.1.1` pre-releases published; not tested on a stand
+- **Date:** 2026-11-18 11:10 UTC
+- **Status:** repo bootstrapped; CI green; GUI + RDP-Tcp rights editor; pre-releases v0.1.0–v0.2.0; not tested on a stand
 - **Repo:** https://github.com/Van-Hoffen/rds-shadow (`main`, `9b86f91`)
 - **Docs:** docs/STATUS.md
 - **TZ:** docs/architecture/tz-v1-draft.md

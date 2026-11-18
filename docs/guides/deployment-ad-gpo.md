@@ -2,17 +2,22 @@
 
 Как подготовить домен и ферму RDS, чтобы клиент `rds-shadow` работал и оставался безопасным. Все действия выполняет администратор домена/фермы, не установщик программы.
 
-Клиент не выдаёт права. Разрешает или запрещает Windows.
+Права на `RDP-Tcp` можно настроить двумя способами:
+
+- **из самого клиента** — кнопка «Права RDP-Tcp» в GUI (редактор с галочками, аналог `tsconfig.msc`/RDSConfig);
+- **через WMI/CIM** — скрипты ниже (штатно, без стороннего ПО).
+
+Клиент не выдаёт права сам по себе: он лишь применяет те же операции WMI, которые сделал бы администратор.
 
 ## 1. Три доменные группы
 
 Создать три группы **Global / Security**. Имена ниже — рабочие; замените на принятые в домене и укажите те же имена в INI.
 
-| Группа | Право на RDP-Tcp | Что включает клиент |
+| Группа | Права (галочки) | Что включает клиент |
 |--------|------------------|---------------------|
-| `RDS-Shadow-View` | Query + Remote Control + Message | список, просмотр, сообщение |
-| `RDS-Shadow-Control` | Query + Remote Control | кнопка управления |
-| `RDS-Shadow-Logoff` | Query + Logoff | завершение сеанса |
+| `RDS-Shadow-View` | Query Information, Remote Control, Message | список, просмотр, сообщение |
+| `RDS-Shadow-Control` | Query Information, Remote Control | кнопка управления |
+| `RDS-Shadow-Logoff` | Query Information, Logoff | завершение сеанса |
 
 Замечание: View и Control получают одно и то же право `Remote Control`. Разница «смотреть» и «управлять» задаётся флагом `/control` на клиенте и потолком политики ниже. Если управление запрещено политикой узла, оно не сработает ни у кого. Обход кнопки управления прямым `mstsc /control` членом View в v1 принят (см. ТЗ).
 
@@ -20,13 +25,12 @@ PowerShell (на контроллере домена, модуль AD):
 
 ```powershell
 Import-Module ActiveDirectory
-$ou = "OU=Support,DC=example,DC=domain"   # OU, где живут группы
+$ou = "OU=Support,DC=example,DC=domain"
 
 New-ADGroup -Name "RDS-Shadow-View"    -GroupScope Global -GroupCategory Security -Path $ou
 New-ADGroup -Name "RDS-Shadow-Control" -GroupScope Global -GroupCategory Security -Path $ou
 New-ADGroup -Name "RDS-Shadow-Logoff"  -GroupScope Global -GroupCategory Security -Path $ou
 
-# Включить специалистов
 Add-ADGroupMember -Identity "RDS-Shadow-View" -Members "a.ivanov", "b.petrov"
 Add-ADGroupMember -Identity "RDS-Shadow-Control" -Members "a.ivanov"
 Add-ADGroupMember -Identity "RDS-Shadow-Logoff"  -Members "s.sidorov"
@@ -34,9 +38,7 @@ Add-ADGroupMember -Identity "RDS-Shadow-Logoff"  -Members "s.sidorov"
 
 ## 2. Политика «правила удалённого контроля» (потолок и согласие)
 
-Это потолок для всех сеансов узла и требование согласия сотрудника. Настраивается GPO на **Session Host**, не на группу.
-
-Путь в GPME:
+GPO на **Session Host** (не на группу):
 
 ```
 Computer Configuration
@@ -51,99 +53,102 @@ Computer Configuration
 
 Значение: **Enabled**, Options → **Full Control with user's permission**.
 
-- `Full Control` — разрешает и просмотр, и управление (на клиенте разница через `/control`).
-- `with user's permission` — сотрудник обязательно даёт согласие. Без этого пункта согласие останется только текстом в ТЗ, а не поведением ОС.
-- Если управление в v1 не нужно вообще, ставьте `View Session with user's permission`, а группа `RDS-Shadow-Control` не создаётся.
+- `Full Control` разрешает и просмотр, и управление (разница — флаг `/control` на клиенте).
+- `with user's permission` — сотрудник обязательно даёт согласие.
+- Если управление в v1 не нужно, ставьте `View Session with user's permission` и не создавайте `RDS-Shadow-Control`.
 
-Применить GPO к OU, где лежат компьютеры Session Host (`RSOP/GPRESULT` для проверки).
+Применить GPO к OU с компьютерами Session Host.
 
-## 3. Права на `RDP-Tcp` (кто вообще может shadow/query/logoff/message)
+## 3. Права на `RDP-Tcp`
 
-Право выдаётся на каждом Session Host на подключение `RDP-Tcp`. Маски — стандарт WINSTATION:
+Право выдаётся на каждом Session Host на подключение `RDP-Tcp`. Два разных набора идентификаторов (не путать):
 
-| Право | Бит (hex) | Десятично |
-|-------|-----------|-----------|
-| Query Information | 0x0001 | 1 |
-| Remote Control (shadow) | 0x0010 | 16 |
-| Logoff | 0x0040 | 64 |
-| Message | 0x0080 | 128 |
+| Операция | `ModifyPermissions` PermissionMask | Бит в `PermissionsAllowed` |
+|----------|-----------------------------------|----------------------------|
+| Query Information | 0 | 1 |
+| Logoff | 2 | 4 |
+| Remote Control (shadow) | 4 | 16 |
+| Message | 7 | 128 |
+| (Reset / завершение подключения) | 6 | 64 |
 
-Итоговые маски групп:
+Наш редактор в GUI использует `ModifyPermissions` и показывает галочки **Информация / Управление / Сообщение / Завершение**, которые соответствуют `PermissionMask` 0 / 4 / 7 / 2.
+
+Итоговые битовые маски групп (для проверки через `PermissionsAllowed`):
 
 | Группа | Маска |
 |--------|-------|
-| `RDS-Shadow-View` | Query + Shadow + Message = **145** |
-| `RDS-Shadow-Control` | Query + Shadow = **17** |
-| `RDS-Shadow-Logoff` | Query + Logoff = **65** |
+| `RDS-Shadow-View` | 1 + 16 + 128 = **145** |
+| `RDS-Shadow-Control` | 1 + 16 = **17** |
+| `RDS-Shadow-Logoff` | 1 + 4 = **5** |
 
-Выдать права на каждом Session Host (PowerShell, от имени администратора):
-
-```powershell
-$tsp = Get-CimInstance -Namespace root\CIMV2\TerminalServices `
-        -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
-
-Invoke-CimMethod -InputObject $tsp -MethodName AddAccount -Arguments @{
-    AccountName     = "EXAMPLE\RDS-Shadow-View"
-    PermissionPreSet = 0        # 0 = WINSTATION_GUEST_ACCESS: использовать PermissionMask
-    PermissionMask   = 145
-}
-Invoke-CimMethod -InputObject $tsp -MethodName AddAccount -Arguments @{
-    AccountName     = "EXAMPLE\RDS-Shadow-Control"
-    PermissionPreSet = 0
-    PermissionMask   = 17
-}
-Invoke-CimMethod -InputObject $tsp -MethodName AddAccount -Arguments @{
-    AccountName     = "EXAMPLE\RDS-Shadow-Logoff"
-    PermissionPreSet = 0
-    PermissionMask   = 65
-}
-```
-
-Для нескольких узлов обернуть в цикл:
+### 3.1 Скрипт (WMI, на каждом Session Host)
 
 ```powershell
-$servers = "ts01", "ts02", "ts03"
-foreach ($s in $servers) {
-    $tsp = Get-CimInstance -ComputerName $s -Namespace root\CIMV2\TerminalServices `
+param([string]$Server = $env:COMPUTERNAME)
+
+function Add-TsAccountAndPerms {
+    param([string]$Group, [int[]]$PermIds)
+
+    $ns = 'root\CIMV2\TerminalServices'
+    $tsp = Get-CimInstance -ComputerName $Server -Namespace $ns `
             -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
-    # … те же три Invoke-CimMethod …
+
+    # Создать запись учётной записи (Guest preset = только Logon).
+    # ReturnValue != 0 — запись уже существует, это не ошибка.
+    Invoke-CimMethod -InputObject $tsp -MethodName AddAccount `
+        -Arguments @{ AccountName = $Group; PermissionPreSet = 0 } | Out-Null
+
+    # Точечно разрешить нужные операции.
+    $acct = Get-CimInstance -ComputerName $Server -Namespace $ns `
+            -ClassName Win32_TSAccount `
+            -Filter "TerminalName='RDP-Tcp' AND AccountName='$Group'"
+    foreach ($id in $PermIds) {
+        Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
+            -Arguments @{ PermissionMask = $id; Allow = $true } | Out-Null
+    }
 }
+
+# View:   Query(0) + Remote Control(4) + Message(7)
+Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-View"    @(0, 4, 7)
+# Control: Query(0) + Remote Control(4)
+Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-Control" @(0, 4)
+# Logoff:  Query(0) + Logoff(2)
+Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-Logoff"  @(0, 2)
 ```
 
-Ручная альтернатива (GUI, один узел): `tsconfig.msc` → Connections → `RDP-Tcp` → Permissions → добавить группу и отметить нужные права (Query, Remote Control, Message, Logoff).
+Для нескольких узлов вызвать с `-Server ts01` и т.д., либо обернуть в цикл. Права на `RDP-Tcp` не разносятся репликацией — на каждом узле свои.
+
+Ручная альтернатива (GUI): кнопка **«Права RDP-Tcp»** в клиенте `rds-shadow.exe` — то же самое окно с галочками, без консоли.
 
 ## 4. Сеть
 
-- `mstsc /shadow` идёт на узел по **3389/TCP** — уже открыт для фермы.
-- Перечисление сеансов и действия через WTS API идут по RPC: **135/TCP** плюс динамический диапазон RPC. Для специалистов на ПК должны быть открыты эти порты до Session Host (обычно уже открыты в доменной сети; проверить, если список пустой).
-- WMI/CIM для выдачи прав в шаге 3 — те же RPC-порты.
+- `mstsc /shadow` идёт на узел по **3389/TCP**.
+- Перечисление сеансов и действия через WTS API — RPC: **135/TCP** + динамический диапазон RPC.
+- WMI для настройки прав — те же RPC-порты, с `packet privacy` (WMI/CIM сам устанавливает нужный уровень аутентификации).
 
 ## 5. Диагностика «error 5» (Access Denied)
 
-`error 5` = `ERROR_ACCESS_DENIED`. Обычный признак: список сеансов виден, а shadow/сообщение/logoff — нет. Это значит, что группе на `RDP-Tcp` выдано право **Query Information (1)**, но не Remote Control / Message / Logoff.
+`error 5` = `ERROR_ACCESS_DENIED`. Признак: список сеансов виден, а shadow/сообщение/logoff — нет. Значит у группы есть **Query Information**, но нет Remote Control / Message / Logoff.
 
-Проверить действующий security descriptor на **Session Host** (не на контроллере домена):
+Проверить действующие битовые маски на Session Host:
 
 ```powershell
-$tsp = Get-CimInstance -Namespace root\CIMV2\TerminalServices `
-        -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
-$r = Invoke-CimMethod -InputObject $tsp -MethodName GetSecurityDescriptor
-$r.Descriptor.DACL | ForEach-Object {
-    "{0,-32} mask={1}" -f $_.Trustee.Name, $_.AccessMask
-}
+Get-CimInstance -Namespace root\CIMV2\TerminalServices `
+  -ClassName Win32_TSAccount -Filter "TerminalName='RDP-Tcp'" |
+  Select-Object AccountName, PermissionsAllowed
 ```
 
-Должно быть три строки с масками `145`, `17`, `65`. Если только `1` — выдайте маски заново (шаг 3).
+Должны быть маски `145`, `17`, `5`. Если только `1` — донастроить права (шаг 3).
 
 Частые причины, что права «не применились»:
 
-1. `AddAccount` выполнен не на Session Host, а на контроллере домена.
-2. `AccountName` — локальная группа с тем же именем, а не доменная `DOMAIN\Group`.
-3. Группа пересоздана после выдачи → SID поменялся, старый ACE висит на старом SID. Удалить (`RemoveAccount`) и добавить заново.
-4. Права на `RDP-Tcp` не разносятся репликацией: выдать на **каждом** узле.
-5. Политика remote control стоит `Not allowed` — тогда shadow не работает даже с правами.
+1. Настройка выполнялась на контроллере домена, а не на Session Host.
+2. `AccountName` — локальная группа, а не доменная `DOMAIN\Group`.
+3. Группа пересоздана после выдачи → SID сменился, старый ACE остался. Удалить запись (`Win32_TSAccount.Delete`) и добавить заново.
+4. Права не продублированы на всех узлах.
+5. Политика remote control стоит `Not allowed`.
 
-Тест вести **обычной учёткой** из `RDS-Shadow-View`, а не админом: у админа UAC-отфильтрованный токен без прав `RDP-Tcp`, и это маскирует результат. После `AddAccount`, если `error 5` остаётся, перезапустить службу `Remote Desktop Services` и перезайти.
+Тест вести обычной учёткой из `RDS-Shadow-View`, а не админом (у админа UAC-отфильтрованный токен без прав `RDP-Tcp`). После изменения прав, если `error 5` остаётся, перезапустить службу `Remote Desktop Services` и перезайти.
 
 ## 6. Проверка
 
@@ -151,27 +156,14 @@ $r.Descriptor.DACL | ForEach-Object {
 
 ```bat
 query session /server:ts01
-qwinsta /server:ts01
-```
-
-Если список виден — Query Information работает. Подключение (только с согласия добровольца, не на чужом сеансе):
-
-```bat
 mstsc /v:ts01 /shadow:<ID>
 ```
 
-Проверить, что сотруднику пришёл запрос согласия. `logoff` и управление проверять только на сеансе, владелец которого ждёт этого.
-
-Проверка действующих прав на узле:
-
-```powershell
-(Get-CimInstance -Namespace root\CIMV2\TerminalServices `
-  -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'").SecurityDescriptor
-```
+Подключение проверять только с согласия добровольца, не на чужом сеансе. Управление и logoff — на сеансе, владелец которого ждёт этого.
 
 ## 7. Заполнить INI
 
-Скопировать `rds-shadow.example.ini` в `rds-shadow.ini` и указать **те же** имена групп:
+Скопировать `rds-shadow.example.ini` в `rds-shadow.ini` и указать те же имена групп:
 
 ```ini
 [connection]
@@ -194,4 +186,4 @@ share_dir =
 language = auto
 ```
 
-Если группа не указана или специалист не входит в неё — соответствующая кнопка в клиенте скрыта/недоступна, действие не стартует.
+Если группа не указана или специалист не входит в неё — кнопка в клиенте скрыта/недоступна.

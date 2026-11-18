@@ -1,6 +1,6 @@
 # Status
 
-**Updated:** 2026-11-18 10:50 UTC
+**Updated:** 2026-11-18 11:10 UTC
 
 ## One-paragraph state
 
@@ -15,6 +15,7 @@
 - Release #1 по тегу `v0.1.0`: success, pre-release с двумя артефактами
 - Actions обновлены на Node 24, предупреждение Node 20 снято (CI #6)
 - GUI-клиент на egui 0.37; раздельные exe `rds-shadow` (GUI) и `rds-shadow-cli`
+- Редактор прав RDP-Tcp в GUI (галочки Query/Remote Control/Message/Logoff)
 - Документация ТЗ, решение 0002, гайд по релизу
 
 ## Broken / unknown

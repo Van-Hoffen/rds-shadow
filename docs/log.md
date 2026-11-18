@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 11:10 UTC — rights editor
+- Changes: GUI-редактор прав RDP-Tcp (`rights.rs` + окно), исправлены WMI-вызовы и битовые маски в гайде
+- Evidence: ModifyPermissions ids сверены с MS Learn; clippy ok под windows-gnu
+- Docs: [[sessions/2026-11-18-rights-editor]], [[guides/deployment-ad-gpo]]
+
 ## 2026-11-18 10:55 UTC — deployment guide
 - Changes: `docs/guides/deployment-ad-gpo.md` — AD groups, RDP-Tcp rights masks, GPO consent, verification
 - Evidence: WINSTATION bit masks; no code change
