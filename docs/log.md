@@ -7,6 +7,10 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 11:40 UTC — fix Deny Logon bug
+- Changes: убран запрет Logon из `setup-rdp-tcp-permissions.ps1` (был Deny, ломал RDP-вход); исправлена обработка ошибок; убран `-Force`; проверка Allowed+Denied
+- Docs: [[guides/deployment-ad-gpo]]
+
 ## 2026-11-18 11:25 UTC — script safety notes
 - Changes: в гайд добавлен раздел «Безопасность применения и откат» (снапшот, откат)
 - Docs: [[guides/deployment-ad-gpo]]

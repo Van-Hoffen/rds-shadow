@@ -73,13 +73,17 @@ Computer Configuration
 
 Наш редактор в GUI использует `ModifyPermissions` и показывает галочки **Информация / Управление / Сообщение / Завершение**, которые соответствуют `PermissionMask` 0 / 4 / 7 / 2.
 
-Итоговые битовые маски групп (для проверки через `PermissionsAllowed`):
+Целевые разрешающие биты групп (нужные операции):
 
-| Группа | Маска |
-|--------|-------|
-| `RDS-Shadow-View` | 1 + 16 + 128 = **145** |
-| `RDS-Shadow-Control` | 1 + 16 = **17** |
-| `RDS-Shadow-Logoff` | 1 + 4 = **5** |
+| Группа | Нужные биты `PermissionsAllowed` |
+|--------|----------------------------------|
+| `RDS-Shadow-View` | Query(1) + Shadow(16) + Message(128) |
+| `RDS-Shadow-Control` | Query(1) + Shadow(16) |
+| `RDS-Shadow-Logoff` | Query(1) + Logoff(4) |
+
+Важно про `Logon` (бит 32): метод `AddAccount` всегда добавляет запись с пресетом (Guest = «только Logon»). Поэтому в `PermissionsAllowed` у наших групп **присутствует и бит Logon (32)**. Это нормально: лишний бит Logon не даёт полноценного RDP-входа без отдельного user right «Allow log on through Remote Desktop Services». Главное — **`PermissionsDenied` должен быть 0**: запретов быть не должно, иначе это блокирует вход участникам группы.
+
+Не ставить запрет Logon через `ModifyPermissions(..., Allow = $false)`: это создаёт Deny, а не «снимает» разрешение, и ломает RDP-вход.
 
 ### 3.1 Скрипт (готовый, в репозитории)
 
@@ -91,12 +95,9 @@ Computer Configuration
 
 # удалённо с ПК админа (нужны права админа на узле)
 .\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Server ts03
-
-# пересоздать записи (если группы пересоздавались и SID сменился)
-.\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Force
 ```
 
-Скрипт сам создаёт записи, снимает лишний бит Logon от пресета и печатает итоговые маски.
+Скрипт только добавляет разрешающие записи (Allow), не создаёт запретов (Deny), проверяет обе маски (`Allowed` и `Denied`) и печатает результат. `-Force` в скрипте нет: при смене SID группы старую запись удаляют вручную (команда в конце скрипта и в разделе «Откат»).
 
 ### 3.2 Скрипт вручную (эквивалент, если нужно понять механику)
 
@@ -107,21 +108,25 @@ function Add-TsAccountAndPerms {
     param([string]$Group, [int[]]$PermIds)
 
     $ns = 'root\CIMV2\TerminalServices'
-    $tsp = Get-CimInstance -ComputerName $Server -Namespace $ns `
-            -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
+    $cim = @{ Namespace = $ns; ClassName = 'Win32_TSAccount'; Filter = "TerminalName='RDP-Tcp'" }
+    if ($Server) { $cim.ComputerName = $Server }
 
-    # Создать запись учётной записи (Guest preset = только Logon).
-    # ReturnValue != 0 — запись уже существует, это не ошибка.
-    Invoke-CimMethod -InputObject $tsp -MethodName AddAccount `
-        -Arguments @{ AccountName = $Group; PermissionPreSet = 0 } | Out-Null
+    # Создать запись, только если её ещё нет.
+    $acct = Get-CimInstance @cim -Filter "TerminalName='RDP-Tcp' AND AccountName='$Group'" -ErrorAction SilentlyContinue
+    if (-not $acct) {
+        $tsp = Get-CimInstance -ComputerName $Server -Namespace $ns `
+                -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
+        $r = Invoke-CimMethod -InputObject $tsp -MethodName AddAccount `
+                -Arguments @{ AccountName = $Group; PermissionPreSet = 0 }
+        if ($r.ReturnValue -ne 0) { throw "AddAccount $Group : $($r.ReturnValue)" }
+        $acct = Get-CimInstance @cim -Filter "TerminalName='RDP-Tcp' AND AccountName='$Group'"
+    }
 
-    # Точечно разрешить нужные операции.
-    $acct = Get-CimInstance -ComputerName $Server -Namespace $ns `
-            -ClassName Win32_TSAccount `
-            -Filter "TerminalName='RDP-Tcp' AND AccountName='$Group'"
+    # Разрешить нужные операции (только Allow, без Deny).
     foreach ($id in $PermIds) {
-        Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
-            -Arguments @{ PermissionMask = $id; Allow = $true } | Out-Null
+        $r = Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
+                -Arguments @{ PermissionMask = $id; Allow = $true }
+        if ($r.ReturnValue -ne 0) { throw "ModifyPermissions($id) $Group : $($r.ReturnValue)" }
     }
 }
 
@@ -149,15 +154,15 @@ Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-Logoff"  @(0, 2)
 
 - Работает с тем же security descriptor `RDP-Tcp`, который читала бы `tsconfig.msc`; новые записи — обычные ACE, стандартную оснастку не ломают.
 - В Windows Server 2012+ прав shadow/message/logoff в GUI Server Manager **нет** (убраны вместе с `tsconfig.msc`), поэтому конфликта с GUI нет: скрипт и редактор в exe — замена убранной оснастки.
-- Снятие бита **Logon** касается только трёх групп поддержки (пресет Guest добавляет право «log on», которого у ТП быть не должно). Обычных пользователей не затрагивает.
-- `-Force` удаляет только записи трёх групп, не остальные.
+- Скрипт **не устанавливает запрет Logon** и вообще не создаёт Deny: `AddAccount` добавляет пресет Guest (бит Logon в Allowed), который остаётся как есть. Запретов нет, вход участникам групп не блокируется.
+- Скрипт не имеет `-Force` и ничего не удаляет.
 
 ### Снапшот до изменения (на всякий случай)
 
 ```powershell
 Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccount `
   -Filter "TerminalName='RDP-Tcp'" |
-  Select-Object AccountName, SID, PermissionsAllowed | Export-Csv .\rdp-tcp-snapshot.csv
+  Select-Object AccountName, SID, PermissionsAllowed, PermissionsDenied | Export-Csv .\rdp-tcp-snapshot.csv
 ```
 
 ### Откат (удалить только наши группы)
@@ -180,10 +185,20 @@ Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccoun
 ```powershell
 Get-CimInstance -Namespace root\CIMV2\TerminalServices `
   -ClassName Win32_TSAccount -Filter "TerminalName='RDP-Tcp'" |
-  Select-Object AccountName, PermissionsAllowed
+  Select-Object AccountName, SID, PermissionsAllowed, PermissionsDenied,
+      @{Name='LogonDenied'; Expression={ ($_.PermissionsDenied -band 32) -ne 0 }}
 ```
 
-Должны быть маски `145`, `17`, `5`. Если только `1` — донастроить права (шаг 3).
+Правильное состояние: нужные биты в `PermissionsAllowed` (Query/Shadow/Message/Logoff по группе), **`PermissionsDenied = 0`**, `LogonDenied = False`. Если `LogonDenied = True` — где-то стоит запрет Logon, его нужно снять, иначе участники группы не смогут заново войти по RDP.
+
+Снять запрет Logon (выдать разрешение, а не оставить запрет):
+
+```powershell
+$acct = Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccount `
+  -Filter "TerminalName='RDP-Tcp' AND AccountName='EXAMPLE\RDS-Shadow-View'"
+Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
+  -Arguments @{ PermissionMask = 5; Allow = $true }
+```
 
 Частые причины, что права «не применились»:
 
@@ -206,7 +221,7 @@ mstsc /v:ts01 /shadow:<ID>
 
 Подключение проверять только с согласия добровольца, не на чужом сеансе. Управление и logoff — на сеансе, владелец которого ждёт этого.
 
-## 7. Заполнить INI
+## 8. Заполнить INI
 
 Скопировать `rds-shadow.example.ini` в `rds-shadow.ini` и указать те же имена групп:
 

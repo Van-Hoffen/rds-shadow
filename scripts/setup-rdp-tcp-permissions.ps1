@@ -3,27 +3,31 @@
     Выдать права теневого подключения группам из ТЗ RDS Shadow на RDP-Tcp.
 
 .DESCRIPTION
-    Настраивает права Query Information / Remote Control / Message / Logoff
-    на подключении RDP-Tcp для трёх доменных групп:
+    Настраивает разрешающие права (Allow) Query Information / Remote Control /
+    Message / Logoff на подключении RDP-Tcp для трёх доменных групп:
         RDS-Shadow-View    — Query + Remote Control + Message
         RDS-Shadow-Control — Query + Remote Control
         RDS-Shadow-Logoff  — Query + Logoff
 
-    Запускать на КАЖДОМ узле сеансов (Session Host), НЕ на брокере.
-    Брокер (RD Connection Broker) права теневого подключения не раздаёт.
+    Скрипт ТОЛЬКО добавляет разрешающие записи (Allow) и НЕ создаёт запретов
+    (Deny). Существующие записи (Administrators, SYSTEM, Remote Desktop Users
+    и другие) не изменяются.
 
-    Требует прав администратора. Без -Server работает локально;
-    с -Server применяется удалённо (нужны права админа на целевом узле).
+    Запускать на КАЖДОМ узле сеансов (Session Host), НЕ на брокере.
+    Требует прав администратора. Без -Server работает локально.
+
+    Примечание про бит Logon (32): метод AddAccount всегда добавляет запись
+    с пресетом (PermissionPreSet=0 = Guest), который включает разрешение
+    Logon. Скрипт его НЕ убирает и НЕ запрещает, потому что WMI не умеет
+    «снять» разрешение без создания запрета, а запрет Logon ломает RDP-вход
+    участникам группы. Лишний бит Logon безопасен: без отдельного user right
+    «Allow log on through Remote Desktop Services» он не даёт полного входа.
 
 .EXAMPLE
     .\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE"
 
 .EXAMPLE
     .\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Server ts03
-
-.EXAMPLE
-    # пересоздать записи (если группы были пересозданы и SID сменился)
-    .\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Force
 #>
 [CmdletBinding()]
 param(
@@ -34,23 +38,22 @@ param(
     [string]$ControlGroup = "RDS-Shadow-Control",
     [string]$LogoffGroup  = "RDS-Shadow-Logoff",
 
-    [string]$Server = "",          # пусто = локальный узел
-
-    [switch]$Force                 # удалить существующую запись перед выдачей
+    [string]$Server = ""           # пусто = локальный узел
 )
 
 $ErrorActionPreference = "Stop"
 $ns = 'root\CIMV2\TerminalServices'
 
-# PermissionMask для Win32_TSAccount.ModifyPermissions
+# PermissionMask для Win32_TSAccount.ModifyPermissions (только Allow)
 $WINSTATION_QUERY  = 0
 $WINSTATION_LOGOFF = 2
 $WINSTATION_SHADOW = 4
-$WINSTATION_LOGON  = 5
 $WINSTATION_MSG    = 7
 
 $serverArg = @{}
 if ($Server) { $serverArg.ComputerName = $Server }
+
+$script:Errors = @()
 
 function Get-TsPermissionsSetting {
     Get-CimInstance @serverArg -Namespace $ns -ClassName Win32_TSPermissionsSetting `
@@ -70,40 +73,36 @@ function Grant-TsPermissions {
     )
     Write-Host "== $Group" -ForegroundColor Cyan
 
-    if ($Force) {
-        $existing = Get-TsAccount -Group $Group -ErrorAction SilentlyContinue
-        if ($existing) {
-            Invoke-CimMethod -InputObject $existing -MethodName Delete | Out-Null
-            Write-Host "   удалена существующая запись" -ForegroundColor Yellow
+    # Создать запись, только если её ещё нет.
+    $acct = Get-TsAccount -Group $Group -ErrorAction SilentlyContinue
+    if (-not $acct) {
+        $tsp = Get-TsPermissionsSetting
+        $add = Invoke-CimMethod -InputObject $tsp -MethodName AddAccount `
+            -Arguments @{ AccountName = $Group; PermissionPreSet = 0 }
+        if ($add.ReturnValue -ne 0) {
+            $script:Errors += "$Group : AddAccount вернул $($add.ReturnValue)"
+            return
         }
-    }
-
-    $tsp = Get-TsPermissionsSetting
-    $add = Invoke-CimMethod -InputObject $tsp -MethodName AddAccount `
-        -Arguments @{ AccountName = $Group; PermissionPreSet = 0 }
-    if ($add.ReturnValue -eq 0) {
+        $acct = Get-TsAccount -Group $Group
         Write-Host "   запись создана"
     } else {
-        Write-Host "   запись уже существовала (AddAccount rc=$($add.ReturnValue))"
+        Write-Host "   запись уже существует"
     }
 
-    $acct = Get-TsAccount -Group $Group
-
-    # Снять Logon, который добавляет пресет Guest (PermissionPreSet=0),
-    # чтобы маска получилась чистой (без лишнего бита).
-    Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
-        -Arguments @{ PermissionMask = $WINSTATION_LOGON; Allow = $false } | Out-Null
-
+    # Разрешить нужные операции (только Allow).
     foreach ($id in $PermIds) {
         $r = Invoke-CimMethod -InputObject $acct -MethodName ModifyPermissions `
             -Arguments @{ PermissionMask = $id; Allow = $true }
         if ($r.ReturnValue -ne 0) {
-            Write-Warning "   ModifyPermissions($id) вернул $($r.ReturnValue)"
+            $script:Errors += "$Group : ModifyPermissions($id) вернул $($r.ReturnValue)"
         }
     }
 
     $fresh = Get-TsAccount -Group $Group
-    Write-Host ("   PermissionsAllowed = {0}" -f $fresh.PermissionsAllowed)
+    Write-Host ("   Allowed = {0}, Denied = {1}" -f $fresh.PermissionsAllowed, $fresh.PermissionsDenied)
+    if ($fresh.PermissionsDenied -ne 0) {
+        $script:Errors += "$Group : обнаружен запрет (Denied = $($fresh.PermissionsDenied))"
+    }
 }
 
 Grant-TsPermissions -Group "$Domain\$ViewGroup"    -PermIds @($WINSTATION_QUERY, $WINSTATION_SHADOW, $WINSTATION_MSG)
@@ -111,5 +110,17 @@ Grant-TsPermissions -Group "$Domain\$ControlGroup" -PermIds @($WINSTATION_QUERY,
 Grant-TsPermissions -Group "$Domain\$LogoffGroup"  -PermIds @($WINSTATION_QUERY, $WINSTATION_LOGOFF)
 
 Write-Host ""
-Write-Host "Ожидаемые маски: View=145, Control=17, Logoff=5" -ForegroundColor Green
-Write-Host "Напомним: права выдаются на КАЖДОМ Session Host; политика согласия — отдельный GPO." -ForegroundColor Green
+if ($script:Errors.Count -gt 0) {
+    Write-Host "ЗАВЕРШЕНО С ОШИБКАМИ:" -ForegroundColor Red
+    $script:Errors | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+} else {
+    Write-Host "Готово. Denied = 0 у всех трёх групп." -ForegroundColor Green
+    Write-Host "Allowed содержит Query(1), и по группе: View +Shadow(16)+Message(128), Control +Shadow(16), Logoff +Logoff(4)."
+    Write-Host "Бит Logon(32) остаётся от пресета Guest — это нормально, запретов нет."
+}
+
+# Если группа пересоздавалась (SID сменился) и старая запись мешает — удалите её вручную:
+#   Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccount `
+#     -Filter "TerminalName='RDP-Tcp'" |
+#     Where-Object { $_.AccountName -eq 'DOMAIN\OldGroup' } |
+#     ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Delete }
