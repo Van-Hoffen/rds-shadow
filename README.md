@@ -1,5 +1,7 @@
 # RDS Shadow
 
+[![CI](https://github.com/Van-Hoffen/rds-shadow/actions/workflows/ci.yml/badge.svg)](https://github.com/Van-Hoffen/rds-shadow/actions/workflows/ci.yml)
+
 Клиент техподдержки для теневого подключения к сеансам RDS и просмотрщик файлового журнала.
 
 Статус: ранний каркас. ТЗ: `docs/architecture/tz-v1-draft.md`. Состояние: `docs/STATUS.md`.

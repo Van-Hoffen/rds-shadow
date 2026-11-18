@@ -7,6 +7,16 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 10:15 UTC — CI green
+- Changes: release workflow triggers only on tags; CI badge in README
+- Evidence: Actions run #1: Linux success, Windows success
+- Docs: [[sessions/2026-11-18-bootstrap-repo]]
+
+## 2026-11-18 10:10 UTC — repo bootstrap
+- Changes: Cargo workspace, Windows client, audit viewer, CI/release workflows, README, release guide
+- Evidence: 19 tests, clippy clean, Windows gnu target check, commit `9b86f91` pushed to `main`
+- Docs: [[sessions/2026-11-18-bootstrap-repo]], [[decisions/0002-repo-ci-release]]
+
 ## 2026-11-18 09:49 UTC — rust tooling installed
 - Changes: `.opencode/agents/rust-pro.md`, `.opencode/skills/rust-async-patterns/`, `.opencode/skills/memory-safety-patterns/` (from wshobson/agents, MIT)
 - Evidence: files written; `model: opus` removed; references copied; user approved

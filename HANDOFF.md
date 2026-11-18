@@ -1,37 +1,40 @@
 # Handoff: RDS Shadow
 
-- **Date:** 2026-11-18 09:44 UTC
-- **Status:** TZ draft saved; project skill installed; no product code; no git remote
+- **Date:** 2026-11-18 10:10 UTC
+- **Status:** repo bootstrapped and pushed; CI running; Windows client not tested on a stand
+- **Repo:** https://github.com/Van-Hoffen/rds-shadow (`main`, `9b86f91`)
 - **Docs:** docs/STATUS.md
 - **TZ:** docs/architecture/tz-v1-draft.md
-- **Decision:** docs/decisions/0001-v1-scope.md
+- **Decisions:** docs/decisions/0001-v1-scope.md, 0002-repo-ci-release.md
 - **Pipeline:** docs/PIPELINE.md (`approved: false`; proposed `hybrid`)
 
 ## Now
 
-- User can approve the TZ and pipeline.
-- Do not implement the client yet.
-- Do not treat syslog or screenshots as v1.
+- First CI run is green on Linux and Windows.
+- Local toolchain installed: Rust 1.100, fmt, clippy; Windows gnu target and mingw for cross-check.
+- Do not test logoff on a production session.
 
 ## Done this session
 
-- TZ draft updated: files-only audit, broker or server list via INI, Windows shadow client, Linux/Windows viewer.
-- Installed project skill `.opencode/skills/rds-shadow-domain/SKILL.md`.
-- Filled `AGENTS.md` gates and the optional `project-orchestrator` overlay.
-- Installed Rust tooling (user-approved, MIT): agent `rust-pro`, skills `rust-async-patterns`, `memory-safety-patterns` from wshobson/agents. Bootstrapped global pack was already on disk.
-- Did not install third-party agents outside the approved list. Evidence: `opencode v2.3.2`.
+- Cargo workspace: `rds-shadow-core`, `rds-shadow` (Windows), `rds-shadow-audit`.
+- Core tests: INI, events, JSONL, filters, `mstsc` args without consent bypass (19 passed).
+- Windows client: WTS list, group gates, message, logoff with typed user, JSONL audit.
+- CI (Linux+Windows) and Release by `v*` tag with version/tag check.
+- First commit pushed. `.gitignore` excludes target, local INI, JSONL.
+- Skills installed earlier: `rds-shadow-domain`, `rust-pro`, `rust-async-patterns`, `memory-safety-patterns`.
 
 ## Not done / blockers
 
-- GitHub repo was requested earlier. `gh` is not installed here, so the remote was not created.
-- No Windows RDS stand. Consent policy on the farm is not verified.
+- No release tag yet. `v0.1.0` is the first candidate.
+- Broker collection discovery is not implemented; `[servers] list` is required.
+- No Windows RDS stand; consent policy and WTS behavior are not verified.
 - Pipeline not approved.
 
 ## Next steps (max 3)
 
-1. Approve `docs/architecture/tz-v1-draft.md`.
-2. Approve pipeline mode `hybrid`.
-3. Install `gh` and create the GitHub repo only after an explicit go.
+1. Confirm CI is green on GitHub.
+2. Run `check-config` and `rds-shadow-audit` against sample JSONL.
+3. Decide: broker discovery next, or GUI, or stand test first.
 
 ## Danger / do not
 

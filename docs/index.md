@@ -9,6 +9,8 @@
 | [[PIPELINE]] | pipeline, not yet approved |
 | [[architecture/tz-v1-draft]] | v1 spec draft |
 | [[decisions/0001-v1-scope]] | why v1 has no syslog and no copied agents |
+| [[decisions/0002-repo-ci-release]] | workspace, CI and release process |
+| [[guides/release]] | how to cut a release |
 | sessions/ | session notes |
 | decisions/ | architecture/product decisions |
 | research/ | research briefs |
