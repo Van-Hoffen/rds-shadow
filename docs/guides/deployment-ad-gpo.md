@@ -118,7 +118,34 @@ foreach ($s in $servers) {
 - Перечисление сеансов и действия через WTS API идут по RPC: **135/TCP** плюс динамический диапазон RPC. Для специалистов на ПК должны быть открыты эти порты до Session Host (обычно уже открыты в доменной сети; проверить, если список пустой).
 - WMI/CIM для выдачи прав в шаге 3 — те же RPC-порты.
 
-## 5. Проверка
+## 5. Диагностика «error 5» (Access Denied)
+
+`error 5` = `ERROR_ACCESS_DENIED`. Обычный признак: список сеансов виден, а shadow/сообщение/logoff — нет. Это значит, что группе на `RDP-Tcp` выдано право **Query Information (1)**, но не Remote Control / Message / Logoff.
+
+Проверить действующий security descriptor на **Session Host** (не на контроллере домена):
+
+```powershell
+$tsp = Get-CimInstance -Namespace root\CIMV2\TerminalServices `
+        -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'"
+$r = Invoke-CimMethod -InputObject $tsp -MethodName GetSecurityDescriptor
+$r.Descriptor.DACL | ForEach-Object {
+    "{0,-32} mask={1}" -f $_.Trustee.Name, $_.AccessMask
+}
+```
+
+Должно быть три строки с масками `145`, `17`, `65`. Если только `1` — выдайте маски заново (шаг 3).
+
+Частые причины, что права «не применились»:
+
+1. `AddAccount` выполнен не на Session Host, а на контроллере домена.
+2. `AccountName` — локальная группа с тем же именем, а не доменная `DOMAIN\Group`.
+3. Группа пересоздана после выдачи → SID поменялся, старый ACE висит на старом SID. Удалить (`RemoveAccount`) и добавить заново.
+4. Права на `RDP-Tcp` не разносятся репликацией: выдать на **каждом** узле.
+5. Политика remote control стоит `Not allowed` — тогда shadow не работает даже с правами.
+
+Тест вести **обычной учёткой** из `RDS-Shadow-View`, а не админом: у админа UAC-отфильтрованный токен без прав `RDP-Tcp`, и это маскирует результат. После `AddAccount`, если `error 5` остаётся, перезапустить службу `Remote Desktop Services` и перезайти.
+
+## 6. Проверка
 
 От имени специалиста из группы View на его ПК:
 
@@ -142,7 +169,7 @@ mstsc /v:ts01 /shadow:<ID>
   -ClassName Win32_TSPermissionsSetting -Filter "TerminalName='RDP-Tcp'").SecurityDescriptor
 ```
 
-## 6. Заполнить INI
+## 7. Заполнить INI
 
 Скопировать `rds-shadow.example.ini` в `rds-shadow.ini` и указать **те же** имена групп:
 
