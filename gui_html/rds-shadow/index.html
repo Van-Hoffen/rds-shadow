@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>RDS Shadow — мокапы интерфейса</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap { width: 760px; margin: 40px auto; padding: 0 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .lead { color: #3b4350; line-height: 1.55; margin: 0 0 20px; }
+  body.night .lead { color: #b8bec6; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--ink); margin-bottom: 8px; background: var(--paper); }
+  li a:hover { background: var(--hover); }
+  li .n { font-family: var(--mono); font-size: 12px; color: var(--muted); width: 24px; }
+  li .t { font-weight: 600; }
+  li .d { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RDS Shadow — мокапы интерфейса</h1>
+  <p class="lead">Визуальный язык — по мотивам депеши (тёмная боковая панель, список, панель деталей, светлая/тёмная тема, модалки с подтверждением и тосты). Нажми на страницу, чтобы открыть её. Внутри каждой — переключатель темы (кнопка внизу слева).</p>
+  <ul>
+    <li><a href="01-sessions.html"><span class="n">01</span><span class="t">Сеансы</span><span class="d">главное окно: список, поиск, детали, действия</span></a></li>
+    <li><a href="02-connect.html"><span class="n">02</span><span class="t">Подключение</span><span class="d">просмотр / управление, согласие сотрудника</span></a></li>
+    <li><a href="03-message.html"><span class="n">03</span><span class="t">Сообщение</span><span class="d">отправка сообщения в сеанс</span></a></li>
+    <li><a href="04-logoff.html"><span class="n">04</span><span class="t">Завершение сеанса</span><span class="d">подтверждение с вводом имени и отсчётом</span></a></li>
+    <li><a href="05-permissions.html"><span class="n">05</span><span class="t">Права RDP-Tcp</span><span class="d">редактор прав с галочками</span></a></li>
+    <li><a href="06-settings.html"><span class="n">06</span><span class="t">Настройки</span><span class="d">INI, группы, журнал, язык, тема</span></a></li>
+  </ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>06 · Настройки</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+</svg>
+
+<div class="stage" style="justify-content:center">
+<div class="frame mid">
+  <div class="settings" style="position:absolute;inset:0">
+    <div class="pages">
+      <h3 style="margin:0 8px 12px;font-size:15px">Настройки</h3>
+      <button class="tab on" style="width:100%;text-align:left;padding:7px 10px;border:none;background:var(--selected);border-radius:6px;font-size:13px">Подключение</button>
+      <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Группы</button>
+      <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Журнал</button>
+      <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Интерфейс</button>
+    </div>
+    <div class="pane">
+      <h2>Подключение</h2>
+      <section>
+        <h4>Источник сеансов</h4>
+        <div class="option"><input type="radio" name="mode" checked><span class="text">Брокер (RD Connection Broker)</span></div>
+        <div class="option"><input type="radio" name="mode"><span class="text">Список серверов</span></div>
+      </section>
+      <section>
+        <h4>Брокер</h4>
+        <input type="text" value="broker.example.domain">
+        <p class="note">Используется при режиме «Брокер».</p>
+      </section>
+      <section>
+        <h4>Список серверов</h4>
+        <input type="text" value="ts01, ts02, ts03">
+        <p class="note">Через запятую. Используется при режиме «Список серверов».</p>
+      </section>
+      <section>
+        <h4>Порт RDP</h4>
+        <input type="text" value="3389" style="width:120px">
+      </section>
+    </div>
+  </div>
+</div>
+</div>
+
+<p class="cap"><b>06 · Настройки.</b> Настройки слоями, как в депеше: слева — страницы, справа — параметры. Секции «Подключение», «Группы», «Журнал», «Интерфейс» (язык/тема). Значения пишутся в INI, не в код; в репозитории — только пример без боевых имён.</p>
+</body>
+</html>

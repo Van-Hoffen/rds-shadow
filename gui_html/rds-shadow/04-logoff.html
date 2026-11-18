@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>04 · Завершение сеанса</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+</svg>
+
+<div class="stage" style="justify-content:center">
+<div class="frame wide">
+  <div class="app twocol">
+    <div class="side">
+      <div class="brand"><span class="logo" style="background:var(--danger)"><svg class="i"><use href="#i-power"/></svg></span>RDS Shadow<span class="version">0.3.0</span></div>
+      <div class="scroll">
+        <button class="item active"><span class="name">Сеансы</span></button>
+        <button class="item quiet"><span class="name">Права RDP-Tcp</span></button>
+        <button class="item quiet"><span class="name">Журнал</span></button>
+      </div>
+      <div class="foot"><button class="foot-btn on" onclick="document.body.classList.toggle('night')"><svg class="i"><use href="#i-moon"/></svg></button><span class="spacer"></span></div>
+    </div>
+    <div class="list">
+      <div class="list-head"><div class="search"><input type="text" placeholder="поиск"></div></div>
+      <div class="list-title"><b>Сеансы</b><span>23</span></div>
+      <div class="rows">
+        <div class="srow selected"><span class="ava">ИВ</span><span class="meta"><span class="user">user_iv</span><span class="host">ts01 · rdp-tcp#29</span></span><span class="id">12</span><span class="tag active">активен</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- confirm modal -->
+  <div class="backdrop">
+    <div class="modal">
+      <h3>Завершить сеанс user_iv?</h3>
+      <p class="text">Несохранённая работа сотрудника будет потеряна. Это действие нельзя отменить после подтверждения.</p>
+      <div class="detail-box">
+        <div class="kv" style="grid-template-columns:90px 1fr;margin:0">
+          <span class="k">Сервер</span><span class="v">ts01</span>
+          <span class="k">Сеанс</span><span class="v">rdp-tcp#29</span>
+          <span class="k">ID</span><span class="v">12</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Введите имя пользователя, чтобы подтвердить</label>
+        <input type="text" placeholder="user_iv">
+      </div>
+      <p class="small muted" style="margin:0">Подтверждение станет активным, когда имя совпадёт.</p>
+      <div class="buttons">
+        <button class="btn ghost left">Отмена</button>
+        <button class="btn danger" disabled><svg class="i"><use href="#i-power"/></svg>Завершить сеанс</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast after confirm -->
+  <div class="toasts">
+    <div class="toast">
+      <span>Сеанс user_iv завершён</span>
+      <button class="act">Отменить</button>
+      <button class="x">×</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<p class="cap"><b>04 · Завершение сеанса.</b> Опасное действие требует: ввода имени пользователя (защита от мисклика), а после подтверждения — всплывающий тост с «Отменить» на несколько секунд (подход депеши). Журнал пишет logoff.requested / ok / fail.</p>
+</body>
+</html>
