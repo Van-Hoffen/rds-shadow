@@ -25,7 +25,7 @@
 
 ## Not done / blockers
 
-- No release tag yet. `v0.1.0` is the first candidate.
+- `v0.1.0` is a pre-release: no broker discovery, no GUI, no stand test.
 - Broker collection discovery is not implemented; `[servers] list` is required.
 - No Windows RDS stand; consent policy and WTS behavior are not verified.
 - Pipeline not approved.

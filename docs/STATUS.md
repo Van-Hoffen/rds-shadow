@@ -11,7 +11,8 @@
 - `rds-shadow-core`: INI, события, JSONL, фильтры, `mstsc_args`
 - `rds-shadow-audit`: фильтры и CSV
 - CI и release workflows
-- CI #1 на GitHub: Linux и Windows — success
+- CI #1 и #3 на GitHub: Linux и Windows — success
+- Release #1 по тегу `v0.1.0`: success, pre-release с двумя артефактами
 - Документация ТЗ, решение 0002, гайд по релизу
 
 ## Broken / unknown
@@ -23,6 +24,6 @@
 
 ## Next
 
-1. Зелёный CI на GitHub
-2. Проверка `check-config` и просмотрщика на тестовом JSONL
-3. Решение по брокеру и GUI
+1. Проверка `check-config` и просмотрщика на тестовом JSONL
+2. Решение по брокеру и GUI
+3. Утвердить ТЗ и pipeline
