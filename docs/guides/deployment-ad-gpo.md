@@ -81,7 +81,24 @@ Computer Configuration
 | `RDS-Shadow-Control` | 1 + 16 = **17** |
 | `RDS-Shadow-Logoff` | 1 + 4 = **5** |
 
-### 3.1 Скрипт (WMI, на каждом Session Host)
+### 3.1 Скрипт (готовый, в репозитории)
+
+Скрипт лежит в проекте: `scripts/setup-rdp-tcp-permissions.ps1`. Запускать на каждом Session Host:
+
+```powershell
+# локально на узле
+.\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE"
+
+# удалённо с ПК админа (нужны права админа на узле)
+.\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Server ts03
+
+# пересоздать записи (если группы пересоздавались и SID сменился)
+.\setup-rdp-tcp-permissions.ps1 -Domain "EXAMPLE" -Force
+```
+
+Скрипт сам создаёт записи, снимает лишний бит Logon от пресета и печатает итоговые маски.
+
+### 3.2 Скрипт вручную (эквивалент, если нужно понять механику)
 
 ```powershell
 param([string]$Server = $env:COMPUTERNAME)
