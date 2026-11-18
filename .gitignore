@@ -9,3 +9,6 @@ rds-shadow.ini
 # Audit output
 *.jsonl
 logs/
+
+# Local build packages
+dist/
