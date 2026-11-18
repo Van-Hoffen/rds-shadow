@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 10:25 UTC — v0.1.0 released
+- Changes: tag `v0.1.0`, 0.x marked pre-release
+- Evidence: Release #1 success; assets `rds-shadow-windows-x64.zip` (707489 B), `rds-shadow-audit-linux-x64.tar.gz` (391970 B)
+- Docs: [[guides/release]], [[sessions/2026-11-18-bootstrap-repo]]
+
 ## 2026-11-18 10:15 UTC — CI green
 - Changes: release workflow triggers only on tags; CI badge in README
 - Evidence: Actions run #1: Linux success, Windows success
