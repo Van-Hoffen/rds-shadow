@@ -7,6 +7,10 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 11:25 UTC — script safety notes
+- Changes: в гайд добавлен раздел «Безопасность применения и откат» (снапшот, откат)
+- Docs: [[guides/deployment-ad-gpo]]
+
 ## 2026-11-18 11:20 UTC — permission setup script
 - Changes: `scripts/setup-rdp-tcp-permissions.ps1` — идемпотентная выдача прав трём группам на RDP-Tcp; ссылка в гайде
 - Evidence: скрипт сверен с ModifyPermissions ids (0/4/7/2) и снятием Logon-пресета

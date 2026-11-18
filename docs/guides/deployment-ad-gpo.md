@@ -143,7 +143,35 @@ Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-Logoff"  @(0, 2)
 - Перечисление сеансов и действия через WTS API — RPC: **135/TCP** + динамический диапазон RPC.
 - WMI для настройки прав — те же RPC-порты, с `packet privacy` (WMI/CIM сам устанавливает нужный уровень аутентификации).
 
-## 5. Диагностика «error 5» (Access Denied)
+## 5. Безопасность применения и откат
+
+Скрипт **аддитивен**: он только добавляет записи трёх групп и не меняет ничего у существующих учёток (`Administrators`, `SYSTEM`, `Remote Desktop Users` и др.). Он не трогает порт, сертификаты, параметры `RDP-Tcp`, службу `Remote Desktop Services` и GPO.
+
+- Работает с тем же security descriptor `RDP-Tcp`, который читала бы `tsconfig.msc`; новые записи — обычные ACE, стандартную оснастку не ломают.
+- В Windows Server 2012+ прав shadow/message/logoff в GUI Server Manager **нет** (убраны вместе с `tsconfig.msc`), поэтому конфликта с GUI нет: скрипт и редактор в exe — замена убранной оснастки.
+- Снятие бита **Logon** касается только трёх групп поддержки (пресет Guest добавляет право «log on», которого у ТП быть не должно). Обычных пользователей не затрагивает.
+- `-Force` удаляет только записи трёх групп, не остальные.
+
+### Снапшот до изменения (на всякий случай)
+
+```powershell
+Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccount `
+  -Filter "TerminalName='RDP-Tcp'" |
+  Select-Object AccountName, SID, PermissionsAllowed | Export-Csv .\rdp-tcp-snapshot.csv
+```
+
+### Откат (удалить только наши группы)
+
+```powershell
+Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccount `
+  -Filter "TerminalName='RDP-Tcp'" |
+  Where-Object { $_.AccountName -like '*RDS-Shadow*' } |
+  ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Delete }
+```
+
+После отката состояние `RDP-Tcp` возвращается к исходному — удаляются только записи трёх групп.
+
+## 6. Диагностика «error 5» (Access Denied)
 
 `error 5` = `ERROR_ACCESS_DENIED`. Признак: список сеансов виден, а shadow/сообщение/logoff — нет. Значит у группы есть **Query Information**, но нет Remote Control / Message / Logoff.
 
@@ -167,7 +195,7 @@ Get-CimInstance -Namespace root\CIMV2\TerminalServices `
 
 Тест вести обычной учёткой из `RDS-Shadow-View`, а не админом (у админа UAC-отфильтрованный токен без прав `RDP-Tcp`). После изменения прав, если `error 5` остаётся, перезапустить службу `Remote Desktop Services` и перезайти.
 
-## 6. Проверка
+## 7. Проверка
 
 От имени специалиста из группы View на его ПК:
 
