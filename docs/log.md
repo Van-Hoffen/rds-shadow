@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 10:40 UTC — Actions on Node 24
+- Changes: checkout v4→v7, upload-artifact v4→v7, download-artifact v4→v8, action-gh-release v2→v3
+- Evidence: CI #6 success; Node.js 20 deprecation annotation gone (was present in CI #5)
+- Docs: [[guides/release]]
+
 ## 2026-11-18 10:25 UTC — v0.1.0 released
 - Changes: tag `v0.1.0`, 0.x marked pre-release
 - Evidence: Release #1 success; assets `rds-shadow-windows-x64.zip` (707489 B), `rds-shadow-audit-linux-x64.tar.gz` (391970 B)

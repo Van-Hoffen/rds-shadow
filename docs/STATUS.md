@@ -11,8 +11,9 @@
 - `rds-shadow-core`: INI, события, JSONL, фильтры, `mstsc_args`
 - `rds-shadow-audit`: фильтры и CSV
 - CI и release workflows
-- CI #1 и #3 на GitHub: Linux и Windows — success
+- CI #1, #3, #6 на GitHub: Linux и Windows — success
 - Release #1 по тегу `v0.1.0`: success, pre-release с двумя артефактами
+- Actions обновлены на Node 24, предупреждение Node 20 снято (CI #6)
 - Документация ТЗ, решение 0002, гайд по релизу
 
 ## Broken / unknown
