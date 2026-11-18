@@ -24,6 +24,7 @@ jobs:
           $name = "rds-shadow-windows-x64"
           New-Item -ItemType Directory -Force -Path "dist/$name" | Out-Null
           Copy-Item target/release/rds-shadow.exe "dist/$name/"
+          Copy-Item target/release/rds-shadow-cli.exe "dist/$name/"
           Copy-Item target/release/rds-shadow-audit.exe "dist/$name/"
           Copy-Item docs/architecture/rds-shadow.example.ini "dist/$name/"
           Compress-Archive -Path "dist/$name/*" -DestinationPath "dist/$name.zip"

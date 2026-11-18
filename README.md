@@ -11,10 +11,17 @@
 | Крейт | Платформа | Назначение |
 |---|---|---|
 | `rds-shadow-core` | любая | INI-конфиг, события аудита, JSONL, фильтры, аргументы `mstsc` |
-| `rds-shadow` | Windows 10/11 | список сеансов, shadow, сообщение, logoff, запись журнала |
+| `rds-shadow` | Windows 10/11 | GUI: список сеансов, shadow, сообщение, logoff, журнал |
+| `rds-shadow-cli` | Windows 10/11 | те же действия из командной строки |
 | `rds-shadow-audit` | Windows, Linux | просмотр JSONL, фильтры, CSV |
 
 Допуск делает Windows. Программа не хранит пароли, не обходит согласие сотрудника и не включает кнопки, если группа не задана в конфиге.
+
+## Запуск
+
+`rds-shadow.exe` без аргументов открывает графический интерфейс. Верхняя строка — путь к INI и «Загрузить»; таблица — сеансы; снизу — номер заявки и кнопки Просмотр / Управление / Сообщение / Завершить сеанс. Управление и завершение требуют отдельных групп и подтверждения.
+
+`rds-shadow-cli.exe` — консольный вариант для диагностики и скриптов.
 
 ## Сборка
 
@@ -37,11 +44,11 @@ cargo check -p rds-shadow --target x86_64-pc-windows-gnu
 Скопировать `docs/architecture/rds-shadow.example.ini` в `rds-shadow.ini` рядом с программой и заполнить имена узлов, брокера и групп. Файл в git не коммитится.
 
 ```bash
-rds-shadow --config rds-shadow.ini check-config
-rds-shadow --config rds-shadow.ini list
-rds-shadow --config rds-shadow.ini shadow --server ts03 --session 14 --ticket SD-12345
-rds-shadow --config rds-shadow.ini message --server ts03 --session 14 --ticket SD-12345 --text "..."
-rds-shadow --config rds-shadow.ini logoff --server ts03 --session 14 --ticket SD-12345 --confirm-user "CORP\\m.petrov"
+rds-shadow-cli --config rds-shadow.ini check-config
+rds-shadow-cli --config rds-shadow.ini list
+rds-shadow-cli --config rds-shadow.ini shadow --server ts03 --session 14 --ticket SD-12345
+rds-shadow-cli --config rds-shadow.ini message --server ts03 --session 14 --ticket SD-12345 --text "..."
+rds-shadow-cli --config rds-shadow.ini logoff --server ts03 --session 14 --ticket SD-12345 --confirm-user "CORP\\m.petrov"
 ```
 
 Просмотрщик:

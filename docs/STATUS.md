@@ -1,6 +1,6 @@
 # Status
 
-**Updated:** 2026-11-18 10:25 UTC
+**Updated:** 2026-11-18 10:50 UTC
 
 ## One-paragraph state
 
@@ -14,6 +14,7 @@
 - CI #1, #3, #6 на GitHub: Linux и Windows — success
 - Release #1 по тегу `v0.1.0`: success, pre-release с двумя артефактами
 - Actions обновлены на Node 24, предупреждение Node 20 снято (CI #6)
+- GUI-клиент на egui 0.37; раздельные exe `rds-shadow` (GUI) и `rds-shadow-cli`
 - Документация ТЗ, решение 0002, гайд по релизу
 
 ## Broken / unknown
@@ -25,6 +26,6 @@
 
 ## Next
 
-1. Проверка `check-config` и просмотрщика на тестовом JSONL
-2. Решение по брокеру и GUI
+1. Проверить GUI на Windows: INI, список, просмотр с согласия добровольца
+2. Брокер (обнаружение коллекций)
 3. Утвердить ТЗ и pipeline

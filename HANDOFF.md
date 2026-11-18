@@ -1,7 +1,7 @@
 # Handoff: RDS Shadow
 
-- **Date:** 2026-11-18 10:25 UTC
-- **Status:** repo bootstrapped; CI green; `v0.1.0` pre-release published; Windows client not tested on a stand
+- **Date:** 2026-11-18 10:50 UTC
+- **Status:** repo bootstrapped; CI green; GUI client added; `v0.1.0`/`v0.1.1` pre-releases published; not tested on a stand
 - **Repo:** https://github.com/Van-Hoffen/rds-shadow (`main`, `9b86f91`)
 - **Docs:** docs/STATUS.md
 - **TZ:** docs/architecture/tz-v1-draft.md
@@ -25,8 +25,8 @@
 
 ## Not done / blockers
 
-- `v0.1.0` is a pre-release: no broker discovery, no GUI, no stand test.
-- Broker collection discovery is not implemented; `[servers] list` is required.
+- No stand test of the GUI. Broker collection discovery is not implemented; `[servers] list` is required.
+- i18n dictionary is partial (RU/EN strings inline).
 - No Windows RDS stand; consent policy and WTS behavior are not verified.
 - Pipeline not approved.
 

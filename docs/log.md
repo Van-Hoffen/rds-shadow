@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 10:50 UTC — GUI
+- Changes: egui client, GUI/CLI split, bundled DejaVuSans, release package includes cli exe
+- Evidence: clippy ok under windows-gnu; subsystems GUI/CUI verified
+- Docs: [[sessions/2026-11-18-gui]]
+
 ## 2026-11-18 10:40 UTC — Actions on Node 24
 - Changes: checkout v4→v7, upload-artifact v4→v7, download-artifact v4→v8, action-gh-release v2→v3
 - Evidence: CI #6 success; Node.js 20 deprecation annotation gone (was present in CI #5)
