@@ -294,7 +294,7 @@ dependencies = [
 
 [[package]]
 name = "rds-shadow"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "clap",
@@ -305,7 +305,7 @@ dependencies = [
 
 [[package]]
 name = "rds-shadow-audit"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "clap",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "rds-shadow-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "serde",
