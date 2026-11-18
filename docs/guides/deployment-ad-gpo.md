@@ -142,6 +142,22 @@ Add-TsAccountAndPerms "EXAMPLE\RDS-Shadow-Logoff"  @(0, 2)
 
 Ручная альтернатива (GUI): кнопка **«Права RDP-Tcp»** в клиенте `rds-shadow.exe` — то же самое окно с галочками, без консоли.
 
+### 3.3 Право входа (Remote Desktop Users) — обязательно
+
+Права Remote Control на `RDP-Tcp` недостаточно: `mstsc /shadow` — это RDP-подключение, и для него нужно ещё право **входа через Remote Desktop Services**. Оно даётся членством в локальной группе **«Пользователи удалённого рабочего стола» (Remote Desktop Users)**. Без него теневое подключение даёт «отказано в доступе», даже если право Remote Control выдано.
+
+Добавить группы на каждом Session Host:
+
+```powershell
+Add-LocalGroupMember -Group "Remote Desktop Users" -Member "DOMAIN\RDS-Shadow-View"
+Add-LocalGroupMember -Group "Remote Desktop Users" -Member "DOMAIN\RDS-Shadow-Control"
+Add-LocalGroupMember -Group "Remote Desktop Users" -Member "DOMAIN\RDS-Shadow-Logoff"
+```
+
+Наш `setup-rdp-tcp-permissions.ps1` делает это автоматически (отключить — `-SkipRemoteDesktopUsers`).
+
+Альтернатива через GPO (вместо локальной группы): `Computer Config → Windows Settings → Security Settings → Local Policies → User Rights Assignment → "Allow log on through Remote Desktop Services"` — добавить туда три группы (не забыв оставить `Administrators` и `Remote Desktop Users`).
+
 ## 4. Сеть
 
 - `mstsc /shadow` идёт на узел по **3389/TCP**.
@@ -178,7 +194,12 @@ Get-CimInstance -Namespace root\CIMV2\TerminalServices -ClassName Win32_TSAccoun
 
 ## 6. Диагностика «error 5» (Access Denied)
 
-`error 5` = `ERROR_ACCESS_DENIED`. Признак: список сеансов виден, а shadow/сообщение/logoff — нет. Значит у группы есть **Query Information**, но нет Remote Control / Message / Logoff.
+`error 5` = `ERROR_ACCESS_DENIED`. Две независимые причины, обе дают эту ошибку:
+
+1. У группы нет **Remote Control** на `RDP-Tcp` (см. раздел 3).
+2. Группа не в **Remote Desktop Users** — нет права входа через Remote Desktop Services (см. раздел 3.3).
+
+Признак, что виновата именно (2): право Remote Control в `PermissionsAllowed` есть (`Shadow`=16, `Denied`=0), политика разрешает, но `mstsc /shadow` всё равно «отказано в доступе».
 
 Проверить действующие битовые маски на Session Host:
 
