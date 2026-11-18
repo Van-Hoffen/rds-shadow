@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-18 10:55 UTC — deployment guide
+- Changes: `docs/guides/deployment-ad-gpo.md` — AD groups, RDP-Tcp rights masks, GPO consent, verification
+- Evidence: WINSTATION bit masks; no code change
+- Docs: [[guides/deployment-ad-gpo]]
+
 ## 2026-11-18 10:50 UTC — GUI
 - Changes: egui client, GUI/CLI split, bundled DejaVuSans, release package includes cli exe
 - Evidence: clippy ok under windows-gnu; subsystems GUI/CUI verified
