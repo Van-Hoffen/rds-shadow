@@ -16,15 +16,14 @@
   <div class="app twocol">
     <div class="side">
       <div class="brand"><span class="logo" style="background:var(--danger)"><svg class="i"><use href="#i-power"/></svg></span>RDS Shadow<span class="version">0.3.0</span></div>
-      <div class="scroll">
-        <button class="item active"><span class="name">Сеансы</span></button>
-        <button class="item quiet"><span class="name">Права RDP-Tcp</span></button>
+      <div class="scroll" role="navigation" aria-label="Разделы">
+        <button class="item active" aria-current="page"><span class="name">Сеансы</span></button>
         <button class="item quiet"><span class="name">Журнал</span></button>
       </div>
-      <div class="foot"><button class="foot-btn on" onclick="document.body.classList.toggle('night')"><svg class="i"><use href="#i-moon"/></svg></button><span class="spacer"></span></div>
+      <div class="foot"><button class="foot-btn on" aria-label="Переключить тему" onclick="document.body.classList.toggle('night')"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></button><span class="spacer"></span></div>
     </div>
     <div class="list">
-      <div class="list-head"><div class="search"><input type="text" placeholder="поиск"></div></div>
+      <div class="list-head"><div class="search"><input type="text" aria-label="Поиск сеансов" data-testid="search" placeholder="поиск"></div></div>
       <div class="list-title"><b>Сеансы</b><span>23</span></div>
       <div class="rows">
         <div class="srow selected"><span class="ava">ИВ</span><span class="meta"><span class="user">user_iv</span><span class="host">ts01 · rdp-tcp#29</span></span><span class="id">12</span><span class="tag active">активен</span></div>
@@ -34,8 +33,8 @@
 
   <!-- confirm modal -->
   <div class="backdrop">
-    <div class="modal">
-      <h3>Завершить сеанс user_iv?</h3>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="logoff-title">
+      <h3 id="logoff-title">Завершить сеанс user_iv?</h3>
       <p class="text">Несохранённая работа сотрудника будет потеряна. Это действие нельзя отменить после подтверждения.</p>
       <div class="detail-box">
         <div class="kv" style="grid-template-columns:90px 1fr;margin:0">
@@ -45,28 +44,28 @@
         </div>
       </div>
       <div class="field">
-        <label>Введите имя пользователя, чтобы подтвердить</label>
-        <input type="text" placeholder="user_iv">
+        <label for="confirm-name">Введите имя пользователя без домена, чтобы подтвердить</label>
+        <input type="text" id="confirm-name" data-testid="logoff-confirm-name" placeholder="user_iv">
       </div>
-      <p class="small muted" style="margin:0">Подтверждение станет активным, когда имя совпадёт.</p>
+      <p class="small muted" style="margin:0">Домен отсекается по обратному слешу: из <span class="mono">CORP\user_iv</span> вводится <span class="mono">user_iv</span>. Кнопка LogOff станет активной, когда имя совпадёт.</p>
       <div class="buttons">
-        <button class="btn ghost left">Отмена</button>
-        <button class="btn danger" disabled><svg class="i"><use href="#i-power"/></svg>Завершить сеанс</button>
+        <button class="btn ghost left" data-testid="logoff-cancel">Отмена</button>
+        <button class="btn danger" disabled data-testid="logoff-confirm"><svg class="i" aria-hidden="true"><use href="#i-power"/></svg>LogOff</button>
       </div>
     </div>
   </div>
 
-  <!-- toast after confirm -->
+  <!-- success notification after logoff -->
   <div class="toasts">
-    <div class="toast">
-      <span>Сеанс user_iv завершён</span>
-      <button class="act">Отменить</button>
-      <button class="x">×</button>
+    <div class="toast" role="status" aria-live="polite" data-q="3.1" data-variant="А">
+      <span>Логофф user_iv выполнен</span>
+      <button class="x" aria-label="Закрыть">×</button>
     </div>
   </div>
 </div>
 </div>
 
-<p class="cap"><b>04 · Завершение сеанса.</b> Опасное действие требует: ввода имени пользователя (защита от мисклика), а после подтверждения — всплывающий тост с «Отменить» на несколько секунд (подход депеши). Журнал пишет logoff.requested / ok / fail.</p>
+<p class="cap"><b>04 · Завершение сеанса.</b> Опасное действие требует ввода имени пользователя без домена и подтверждения; после — уведомление внизу справа. Журнал пишет logoff.requested / ok / fail.</p>
+<p class="cap" data-q="3.1" data-q-title="Тост после завершения" data-recommended="А">Решено 3.1: <b>А</b> — тост без «Отменить», logoff необратим. Поток: кнопка «Завершить сеанс» → окно с полем и кнопками LogOff / Отмена → ввод имени без домена (отсекается по <span class="mono">\</span>) → LogOff → окно закрывается → программа опрашивает список сеансов выбранного узла (интервал 2 с, максимум 40 с), ждёт исчезновения пользователя с этим ID → уведомление «Логофф выполнен» внизу справа, фокус не переходит. Если за 40 с сеанс всё ещё виден — предупреждение, а не успех.</p>
 </body>
 </html>

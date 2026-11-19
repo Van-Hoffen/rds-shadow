@@ -306,8 +306,16 @@ pub fn resolve_hosts(cfg: &Config) -> Result<Vec<String>, String> {
     }
 }
 
-pub fn run_mstsc(server: &str, session: u32, control: bool) -> std::io::Result<ExitStatus> {
-    let args = rds_shadow_core::command::mstsc_args(server, session, control);
+pub fn run_mstsc(
+    server: &str,
+    session: u32,
+    control: bool,
+    port: u16,
+) -> std::io::Result<ExitStatus> {
+    let rdp = rds_shadow_core::command::rdp_file(server, port);
+    let path = std::env::temp_dir().join(format!("rds-shadow-{session}.rdp"));
+    std::fs::write(&path, rdp)?;
+    let args = rds_shadow_core::command::mstsc_shadow_args(path.as_path(), session, control);
     Command::new("mstsc.exe").args(&args).status()
 }
 

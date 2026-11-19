@@ -210,7 +210,7 @@ fn shadow(
     audit::record(cfg, start);
 
     let began = Instant::now();
-    let status = platform::run_mstsc(server, session, control)?;
+    let status = platform::run_mstsc(server, session, control, cfg.connection.rdp_port)?;
 
     let mut end = AuditEvent::new(
         EventKind::ShadowEnd,

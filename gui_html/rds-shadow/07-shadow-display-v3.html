@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>07 v3 · Тень и мониторы: с контекстом к каждому вопросу</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .docwrap { width: 1180px; max-width: 100%; margin: 30px auto 80px; padding: 0 20px; }
+  .docwrap h1 { font-size: 22px; margin: 0 0 6px; }
+  .docwrap .lead { color: #3b4350; line-height: 1.55; max-width: 960px; }
+  body.night .docwrap .lead { color: #b8bec6; }
+  .docwrap section { margin: 30px 0; }
+  .docwrap h2 { font-size: 17px; margin: 0 0 10px; display: flex; gap: 8px; align-items: baseline; }
+  .docwrap h2 .num { font-family: var(--mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+  .docwrap .cap { max-width: 1000px; }
+  .v2tag { display:inline-block; font: 11px/1 var(--mono); color:#fff; background:var(--accent); border-radius: 5px; padding: 3px 7px; margin-left: 6px; vertical-align: middle; }
+
+  /* RDP window chrome */
+  .rdpwin { width: 980px; max-width: 100%; border-radius: 10px; overflow: hidden; background: #fff; color: #1a1a1a; border: 1px solid #cfcfcf; box-shadow: 0 12px 32px rgb(0 0 0 / 20%); }
+  .tbar { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; background: #f3f3f3; border-bottom: 1px solid #dcdcdc; font-size: 12px; color: #333; }
+  .tbar .ic { width: 14px; height: 14px; border-radius: 3px; background: var(--accent); flex: none; }
+  .tbar .ttl { font-weight: 600; }
+  .tbar .sp { flex: 1; }
+  .tbar .wc { display: flex; gap: 9px; color: #777; font-family: var(--mono); font-size: 12px; }
+  .client { position: relative; background: #6f6f6f; overflow: hidden; }
+
+  .desk { display: flex; gap: 6px; padding: 8px; background: linear-gradient(160deg,#1b2530,#101820); }
+  .mon { position: relative; background: radial-gradient(120% 120% at 30% 10%, #2a3a4a, #0f1720 70%); border: 1px solid #33465a; border-radius: 4px; overflow: hidden; }
+  .mlabel { position: absolute; top: 3px; left: 4px; font: 10px/1 var(--mono); color: #8fb0d0; opacity: .85; }
+  .fw { position: absolute; background: #fff; border-radius: 3px; box-shadow: 0 2px 6px rgb(0 0 0 / 35%); padding: 4px; }
+  .fw .h { height: 5px; background: #dbe3ee; border-radius: 2px; margin-bottom: 3px; }
+  .fw i { display: block; height: 3px; background: #c4ccd6; border-radius: 2px; margin: 3px 0; }
+  .fw i.short { width: 58%; }
+
+  .fitdesk .mon { flex: 1; height: 168px; }
+
+  .client.detail { height: 300px; }
+  .desk.big { width: 1500px; height: 288px; gap: 6px; }
+  .desk.big .mon { height: 272px; }
+  .desk.big .mon:first-child { flex: 0 0 900px; }
+  .desk.big .mon:last-child { flex: 1; }
+  .desk.big .fw { padding: 7px; }
+  .desk.big .fw .h { height: 8px; }
+  .desk.big .fw i { height: 4px; margin: 5px 0; }
+  .desk.big .fw i.txt { background: #9aa6b3; }
+
+  .sbv { position: absolute; right: 0; top: 0; width: 12px; height: calc(100% - 12px); background: #e6e6e6; }
+  .sbv::after { content: ""; position: absolute; left: 2px; right: 2px; top: 20%; height: 22%; background: #a9a9a9; border-radius: 5px; }
+  .sbh { position: absolute; left: 0; bottom: 0; width: calc(100% - 12px); height: 12px; background: #e6e6e6; }
+  .sbh::after { content: ""; position: absolute; top: 2px; bottom: 2px; left: 26%; width: 20%; background: #a9a9a9; border-radius: 5px; }
+
+  .minimap { position: absolute; right: 16px; bottom: 18px; width: 150px; height: 92px; background: #0b1117; border: 1px solid #55606c; border-radius: 6px; box-shadow: 0 6px 16px rgb(0 0 0 / 40%); }
+  .minimap .mm-h { position: absolute; top: -18px; left: 0; font: 10px/1 var(--mono); color: #cdd7e2; }
+  .minimap .m { position: absolute; background: #2a3a4a; border: 1px solid #46586b; border-radius: 2px; }
+  .minimap .vp { position: absolute; border: 2px solid #ffd166; border-radius: 2px; background: rgb(255 209 102 / 12%); }
+
+  .ovl { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+  .chip { font-size: 12px; padding: 3px 9px; border-radius: 14px; background: rgb(20 28 36 / 72%); color: #e8eef4; border: 1px solid rgb(255 255 255 / 18%); }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .livehint { position:absolute; left:10px; bottom:10px; font:11px/1.3 var(--mono); color:#ffe08a; background: rgb(20 28 36 / 78%); border:1px solid #5a5130; border-radius:6px; padding:5px 8px; max-width: 360px; }
+
+  .client.three { background: #101820; padding: 10px; }
+  .three .layout { position: relative; display: flex; gap: 6px; align-items: flex-end; height: 250px; }
+  .three .mon { border-radius: 4px; }
+  .three .mL { flex: 0 0 300px; height: 178px; align-self: flex-start; }
+  .three .mP { flex: 0 0 132px; height: 250px; }
+  .three .m4k { flex: 0 0 340px; height: 200px; align-self: center; }
+  .three .bbox { position: absolute; inset: 2px 6px 2px 2px; border: 1px dashed #7fb0ec; border-radius: 6px; pointer-events: none; }
+  .three .bbox .bl { position: absolute; top: -16px; left: 0; font: 10px/1 var(--mono); color: #9cc0ea; }
+
+  /* host layout (SetParent / WGC) */
+  .hostwrap { position: absolute; inset: 0; display: grid; grid-template-columns: 240px 1fr; background: var(--paper); }
+  .hpanel { background: var(--paper-2); border-right: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+  .hpanel .brand { color: var(--ink); font-weight: 700; padding: 0 0 4px; display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .hpanel .group-label { color: var(--muted); padding: 0; }
+  .hp-row { font-size: 12px; color: var(--muted); }
+  .hpanel .note { font-size: 11.5px; color: var(--muted); line-height: 1.42; margin: 0; }
+  .hembed { padding: 10px; background: #e9e4da; display: flex; }
+  .hembed .rdpwin { width: 100%; box-shadow: none; }
+  .hviewer { position: relative; background: #0b1117; overflow: hidden; }
+  .vwport { position: absolute; inset: 10px 10px 54px 10px; overflow: hidden; border-radius: 6px; background: #0f1720; }
+  .vwport .fw { padding: 9px; }
+  .vwport .fw .h { height: 9px; }
+  .vwport .fw i { height: 5px; margin: 6px 0; }
+  .vwport .fw i.txt { background: #9aa6b3; }
+  .zoomui { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 10px; background: rgb(20 28 36 / 82%); border: 1px solid #3a4756; border-radius: 8px; padding: 6px 10px; color: #cdd7e2; font-size: 12px; }
+  .zoomui input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .zoomui .mbtn { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #1d2733; border: 1px solid #3a4756; color: #cdd7e2; }
+  .zoomui .mbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* choices */
+  .chooserow { margin: 12px 0 6px; }
+  .chooserow .ctitle { font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+  .chooserow .qctx { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0 0 10px; max-width: 940px; }
+  .chooserow .qctx code { font-family: var(--mono); font-size: 12px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choice { display: flex; gap: 8px; align-items: flex-start; padding: 7px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; max-width: 340px; }
+  .choice input { margin-top: 2px; flex: none; }
+  .choice .lbl { font-size: 13px; line-height: 1.35; }
+  .choice .d { display: block; font-size: 11.5px; color: var(--muted); }
+
+  .promptbox { margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-2); padding: 14px 16px; }
+  .promptbox h3 { margin: 0 0 8px; font-size: 14px; }
+  .promptbox textarea { width: 100%; min-height: 140px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; resize: vertical; }
+  .promptbox .prow { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+  .promptbox .hint { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="docwrap">
+<h1>07 · Тень и мониторы <span class="v2tag">v3</span></h1>
+<p class="lead">Версия 3 — то же, что v2, но <b>у каждого вопроса есть контекст</b>: что спрашивается, что это не значит и какие ограничения. Факты: smart sizing переключается на лету в меню окна mstsc (переподключение — только для смены разрешения); встроить сеанс можно через <b>SetParent</b> (раскладка) или <b>Windows.Graphics.Capture</b> (zoom/pan, но перерисовка). Предыдущие версии: <a href="07-shadow-display.html">v1</a>, <a href="07-shadow-display-v2.html">v2</a>.</p>
+
+<!-- A -->
+<section>
+<h2><span class="num">A</span> Обзор: весь стол вписан</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 12 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client">
+      <div class="desk fitdesk">
+        <div class="mon"><div class="mlabel">Монитор 1 · 1920×1080</div>
+          <div class="fw" style="left:26px;top:46px;width:150px"><div class="h"></div><i></i><i class="short"></i></div>
+          <div class="fw" style="right:22px;bottom:20px;width:180px;height:78px"><div class="h"></div><i></i><i></i><i class="short"></i></div></div>
+        <div class="mon"><div class="mlabel">Монитор 2 · 1920×1080</div>
+          <div class="fw" style="left:30px;top:24px;width:200px;height:92px"><div class="h"></div><i></i><i></i><i></i><i class="short"></i></div>
+          <div class="fw" style="right:30px;bottom:34px;width:150px"><div class="h"></div><i></i><i class="short"></i></div></div>
+      </div>
+      <div class="ovl"><span class="chip on">Обзор</span><span class="chip">Детали 1:1</span></div>
+      <div class="livehint">Переключение «Обзор ⇄ Детали» — на лету, в меню окна mstsc. Без переподключения.</div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>A — «Обзор».</b> <code>smart sizing:i:1</code>: весь стол вписан. Видно всё и курсор, текст мелкий. Годится для «где сотрудник», не для чтения.</p>
+</section>
+
+<!-- B -->
+<section>
+<h2><span class="num">B</span> Детали 1:1: нативно и прокрутка</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 12 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client detail">
+      <div class="desk big">
+        <div class="mon"><div class="mlabel">Монитор 1 · 1920×1080</div>
+          <div class="fw" style="left:40px;top:70px;width:300px;height:150px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i><i class="txt"></i></div>
+          <div class="fw" style="right:40px;bottom:26px;width:280px;height:110px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i></div></div>
+        <div class="mon"><div class="mlabel">Монитор 2 · 1920×1080</div>
+          <div class="fw" style="left:40px;top:40px;width:300px;height:130px"><div class="h"></div><i class="txt"></i><i class="txt"></i></div></div>
+      </div>
+      <div class="minimap" aria-hidden="true"><span class="mm-h">весь стол</span>
+        <div class="m" style="left:8px;top:12px;width:64px;height:62px"></div>
+        <div class="m" style="right:8px;top:12px;width:64px;height:62px"></div>
+        <div class="vp" style="left:8px;top:12px;width:38px;height:34px"></div></div>
+      <div class="sbv" aria-hidden="true"></div><div class="sbh" aria-hidden="true"></div>
+      <div class="ovl"><span class="chip">Обзор</span><span class="chip on">Детали 1:1</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>B — «Детали 1:1».</b> <code>smart sizing:i:0</code>: пиксель в пиксель, окно меньше стола → прокрутка к нужному монитору. Читаемо; не видно всё сразу. Мини-карта — опционально.</p>
+</section>
+
+<!-- C -->
+<section>
+<h2><span class="num">C</span> Три монитора разного размера/ориентации</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 7 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client three"><div class="layout">
+      <div class="bbox"><span class="bl">общая поверхность ≈ 6160 × 2160</span></div>
+      <div class="mon mL"><div class="mlabel">#1 · 1920×1080 · альбом</div></div>
+      <div class="mon mP"><div class="mlabel">#2 · 1080×1920 · книга</div></div>
+      <div class="mon m4k"><div class="mlabel">#3 · 3840×2160 · альбом</div></div>
+    </div></div>
+  </div>
+</div>
+<p class="cap"><b>C — как это выглядит.</b> Общая поверхность широкая и высокая; <code>mstsc</code> показывает её целиком. Один удалённый монитор не выбрать; приём — «Детали» + прокрутка.</p>
+</section>
+
+<!-- choice: display mode -->
+<div class="chooserow" data-q="7.1" data-q-title="Режим по умолчанию">
+  <p class="ctitle">Выбор 7.1 — режим по умолчанию (один):</p>
+  <p class="qctx">Это про то, как показывать <b>весь стол сотрудника</b> при открытии. Мониторы сотрудника всегда показываются вместе — выбрать один нельзя. Режим переключается на лету в меню окна mstsc; переподключение не нужно (оно нужно только для смены разрешения сеанса).</p>
+  <div class="choices">
+    <label class="choice"><input type="radio" name="dmode" data-label="Обзор (вписать весь стол)"><span class="lbl">A — Обзор<span class="d">видно всё, текст мелкий</span></span></label>
+    <label class="choice"><input type="radio" name="dmode" data-label="Детали 1:1 (нативно + прокрутка)"><span class="lbl">B — Детали 1:1<span class="d">читаемо, нужна прокрутка</span></span></label>
+    <label class="choice"><input type="radio" name="dmode" data-label="Авто: Детали, если стол шире моего монитора, иначе Обзор" checked><span class="lbl">Авто<span class="d">детали при широком столе</span></span></label>
+  </div>
+</div>
+
+<!-- D: start dialog -->
+<section>
+<h2><span class="num">D</span> Наш диалог «Отображение» (стартовый режим)</h2>
+<div class="stage">
+  <div class="frame mid" style="width: 560px; height: auto; padding: 0">
+    <div class="modal" style="position: static; width: auto; box-shadow: none; border-radius: 0">
+      <h3>Отображение теневого сеанса</h3>
+      <p class="text small muted" style="margin:0">Сеанс <b>user_iv</b> · ts01 · ID 12. У сотрудника несколько мониторов.</p>
+      <div class="detail-box">
+        <div class="opt"><input type="radio" name="dmode2" data-testid="dmode-fit"><span class="t"><b>Обзор</b><span class="d">Вписать весь стол.</span></span></div>
+        <div class="opt"><input type="radio" name="dmode2" data-testid="dmode-detail" checked><span class="t"><b>Детали 1:1</b><span class="d">Нативно + прокрутка.</span></span></div>
+      </div>
+      <div class="field"><label for="dmon">Открыть на мониторе</label>
+        <select id="dmon" data-testid="dmon"><option>Мой монитор 1 (основной)</option><option>Мой монитор 2</option><option>Разложить на мои мониторы (если совпадают)</option></select></div>
+      <div class="option"><input type="checkbox" data-testid="dremember" checked><span class="text">Запомнить для узла ts01</span></div>
+      <p class="small muted" style="margin:0">Стартовый режим задаётся здесь; переключать «Обзор ⇄ Детали» можно на лету в меню окна mstsc. Согласие сотрудника обязательно.</p>
+      <div class="buttons"><button class="btn ghost left" data-testid="dismiss">Отмена</button><button class="btn primary" data-testid="launch">Подключиться</button></div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>D — наш диалог.</b> Задаёт <b>стартовый</b> режим и размещение. Живое переключение — в меню mstsc (без переподключения).</p>
+</section>
+
+<!-- choice: placement -->
+<div class="chooserow" data-q="7.2" data-q-title="Размещение окна">
+  <p class="ctitle">Выбор 7.2 — куда открывать окно (один):</p>
+  <p class="qctx">Это про <b>ваши локальные мониторы</b> — на каком из ваших экранов откроется окно сеанса. <b>Не</b> про мониторы сотрудника: они показываются вместе одной поверхностью. <code>/span</code> работает только если ваши мониторы одинакового разрешения и стоят в ряд; для shadow растягивание не гарантировано.</p>
+  <div class="choices">
+    <label class="choice"><input type="radio" name="place" data-label="На мониторе, где открыт RDS Shadow" checked><span class="lbl">На мониторе RDS Shadow<span class="d">там, где вы работаете</span></span></label>
+    <label class="choice"><input type="radio" name="place" data-label="На моём выбранном мониторе (запоминается на узел)"><span class="lbl">На моём выбранном<span class="d">например, широкий 4K</span></span></label>
+    <label class="choice"><input type="radio" name="place" data-label="Растянуть на мои мониторы (/span, только одинаковые)"><span class="lbl">Растянуть на мои мониторы<span class="d">/span, только одинаковые</span></span></label>
+  </div>
+</div>
+
+<!-- E: SetParent host -->
+<section>
+<h2><span class="num">E</span> Встроить окно сеанса в наше окно (SetParent)</h2>
+<div class="stage">
+  <div class="frame wide" style="width: 1000px; height: 520px; padding: 0">
+    <div class="hostwrap">
+      <div class="hpanel">
+        <div class="brand"><span class="logo" style="width:18px;height:18px;border-radius:5px;background:var(--accent)"></span>RDS Shadow</div>
+        <div class="group-label">Теневой сеанс</div>
+        <div class="hp-row">user_iv · ts01 · ID 12</div>
+        <button class="btn sm primary">Детали 1:1</button>
+        <button class="btn sm">Обзор</button>
+        <p class="note">Окно mstsc встроено в панель (SetParent). Наш панель рядом; размером окна управляем.</p>
+        <p class="note">Масштаб задаёт mstsc: стартовый — из .rdp, живой — в меню окна. DPI нашего и дочернего окна должны совпадать.</p>
+      </div>
+      <div class="hembed">
+        <div class="rdpwin">
+          <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 12 (встроено)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+          <div class="client detail" style="height:430px">
+            <div class="desk big" style="height:414px">
+              <div class="mon"><div class="mlabel">Монитор 1</div><div class="fw" style="left:40px;top:60px;width:300px;height:150px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i></div></div>
+              <div class="mon"><div class="mlabel">Монитор 2</div><div class="fw" style="left:40px;top:40px;width:300px;height:130px"><div class="h"></div><i class="txt"></i><i class="txt"></i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>E — SetParent.</b> Окно mstsc переподчинено нашему окну: сеанс живёт внутри программы, рядом панель. Даёт раскладку и единое окно, но <b>не</b> даёт произвольного zoom/pan — масштаб всё равно у mstsc. Риск: кросс-процессный DPI может форсировать сброс дочернего окна.</p>
+</section>
+
+<!-- F: WGC viewer -->
+<section>
+<h2><span class="num">F</span> Свой рендерер: захват окна и zoom/pan (Windows.Graphics.Capture)</h2>
+<div class="stage">
+  <div class="frame wide" style="width: 1000px; height: 520px; padding: 0">
+    <div class="hostwrap">
+      <div class="hpanel">
+        <div class="brand"><span class="logo" style="width:18px;height:18px;border-radius:5px;background:var(--accent)"></span>Свой вид</div>
+        <div class="group-label">Масштаб</div>
+        <div class="hp-row">zoom 140%</div>
+        <div class="group-label">Область</div>
+        <div class="hp-row">Монитор 1 ▸</div>
+        <p class="note">Кадр окна mstsc захватывается (WGC) и рисуется у нас: произвольный zoom/pan/crop по мониторам.</p>
+        <p class="note">Жёлтая рамка захвата, латентность; проброс ввода — отдельная сложная часть (видение/управление).</p>
+      </div>
+      <div class="hviewer">
+        <div class="vwport">
+          <div class="desk" style="height:100%;padding:12px;background:#0f1720">
+            <div class="mon" style="flex:1;height:100%"><div class="mlabel">Монитор 1 · увеличен</div>
+              <div class="fw" style="left:40px;top:40px;width:360px;height:170px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i><i class="txt"></i></div>
+              <div class="fw" style="right:40px;bottom:30px;width:300px;height:130px"><div class="h"></div><i class="txt"></i><i class="txt short"></i></div></div>
+          </div>
+        </div>
+        <div class="minimap" style="right:20px;bottom:70px"><span class="mm-h">весь стол</span>
+          <div class="m" style="left:8px;top:12px;width:64px;height:62px"></div>
+          <div class="m" style="right:8px;top:12px;width:64px;height:62px"></div>
+          <div class="vp" style="left:8px;top:12px;width:40px;height:50px"></div></div>
+        <div class="zoomui">
+          <span>Монитор</span><span class="mbtn on">#1</span><span class="mbtn">#2</span><span class="mbtn">#3</span>
+          <span style="margin-left:6px">−</span><input type="range" min="50" max="300" value="140" aria-label="Масштаб"><span>+</span><span>140%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>F — свой рендерер (WGC).</b> Настоящий контроль вида: zoom, pan, выбор монитора (crop). Но это перерисовка кадра: рамка захвата, латентность, и проброс ввода для управления — отдельная сложная работа. Для «только смотреть» — годится; для управления — тяжело.</p>
+</section>
+
+<!-- choice: architecture -->
+<div class="chooserow" data-q="7.4" data-q-title="Способ встраивания">
+  <p class="ctitle">Выбор 7.4 — как давать контроль вида (один):</p>
+  <p class="qctx">Это про то, как давать контроль вида. <code>mstsc</code> остаётся реальным RDP-клиентом; API shadow для программного контроля нет. <b>SetParent</b> — раскладка (не зум), риск DPI. <b>WGC</b> — настоящий zoom/pan/crop, но перерисовка (рамка захвата, латентность) и сложный проброс ввода. <b>ActiveX</b> — обычный RDP, shadow не поддержан.</p>
+  <div class="choices">
+    <label class="choice"><input type="radio" name="arch" data-label="Только mstsc + диалог запуска, без встраивания" checked><span class="lbl">Только mstsc + диалог<span class="d">просто, старт-режим, живое меню</span></span></label>
+    <label class="choice"><input type="radio" name="arch" data-label="Встроить окно mstsc в наше окно (SetParent)"><span class="lbl">SetParent<span class="d">единое окно, раскладка</span></span></label>
+    <label class="choice"><input type="radio" name="arch" data-label="Свой рендерер через Windows.Graphics.Capture (zoom/pan)"><span class="lbl">Свой рендерер (WGC)<span class="d">настоящий zoom/pan, перерисовка</span></span></label>
+    <label class="choice"><input type="radio" name="arch" data-label="RDP ActiveX — не подходит для shadow (отклонить)"><span class="lbl">RDP ActiveX<span class="d">обычный RDP, shadow не поддержан</span></span></label>
+  </div>
+</div>
+
+<!-- choice: extras (multi) -->
+<div class="chooserow" data-q="7.3" data-q-title="Дополнительно">
+  <p class="ctitle">Выбор 7.3 — что включить (можно несколько):</p>
+  <p class="qctx">Что включить в интерфейсе (можно несколько). <b>Лупа ОС</b> — дешёвое увеличение без смены режима. <b>Мини-карта</b> — навигация в режиме деталей. <b>Запоминать на узел</b> — не выбирать каждый раз. <b>Памятка</b> — подсказка, что режим переключается в меню mstsc.</p>
+  <div class="choices">
+    <label class="choice"><input type="checkbox" data-prompt data-label="Подсказка про лупу ОС (Win + «+»)" checked><span class="lbl">Подсказка про лупу ОС</span></label>
+    <label class="choice"><input type="checkbox" data-prompt data-label="Мини-карта в режиме деталей"><span class="lbl">Мини-карта деталей</span></label>
+    <label class="choice"><input type="checkbox" data-prompt data-label="Запоминать режим и монитор на узел" checked><span class="lbl">Запоминать на узел</span></label>
+    <label class="choice"><input type="checkbox" data-prompt data-label="Памятка в диалоге про живое переключение в меню mstsc" checked><span class="lbl">Памятка про меню mstsc</span></label>
+  </div>
+</div>
+
+<!-- prompt -->
+<div class="promptbox">
+  <h3>Готовый промт по сделанному выбору</h3>
+  <textarea id="prompt" aria-label="Промт для агента" readonly></textarea>
+  <div class="prow"><span class="hint">Текст собирается из выборов выше автоматически.</span><button class="btn primary" id="copy">Скопировать</button></div>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var GROUPS = { dmode: "Режим по умолчанию", place: "Размещение окна", arch: "Способ встраивания" };
+  function build() {
+    var out = ["Задание по макету 07 v3 — теневой сеанс и несколько мониторов.", ""];
+    Object.keys(GROUPS).forEach(function (name) {
+      var el = document.querySelector('input[name="' + name + '"]:checked');
+      out.push("- " + GROUPS[name] + ": " + (el ? el.getAttribute("data-label") : "— не выбрано —"));
+    });
+    var extras = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][data-prompt]'))
+      .filter(function (c) { return c.checked; })
+      .map(function (c) { return c.getAttribute("data-label"); });
+    out.push("- Дополнительно: " + (extras.length ? extras.join("; ") : "—"));
+    out.push("");
+    out.push("Действуй по этому выбору: обнови ТЗ §8 и реализацию отображения shadow в rds-shadow. Учти: smart sizing переключается на лету в меню mstsc; смена разрешения сеанса требует переподключения.");
+    return out.join("\n");
+  }
+  function refresh() { document.getElementById("prompt").value = build(); }
+  document.addEventListener("change", refresh);
+  document.getElementById("copy").addEventListener("click", function () {
+    var ta = document.getElementById("prompt");
+    ta.select();
+    var done = function () { var b = document.getElementById("copy"); var t = b.textContent; b.textContent = "Скопировано"; setTimeout(function () { b.textContent = t; }, 1200); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(done, function () { document.execCommand("copy"); done(); });
+    } else { document.execCommand("copy"); done(); }
+  });
+  refresh();
+})();
+</script>
+</body>
+</html>

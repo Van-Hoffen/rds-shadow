@@ -6,5 +6,3 @@ pub mod audit;
 pub mod cli;
 #[cfg(windows)]
 pub mod platform;
-#[cfg(windows)]
-pub mod rights;

@@ -7,6 +7,61 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-19 — Этап 1 генерации .rdp + запуска; правка про горячие клавиши
+- Changes: принято без нового макета — горячие клавиши функций WGC-окна настраиваются в разделе «Горячие клавиши» настроек (ТЗ §8, решение 0005, gui-map). Этап 1 реализован: `rds-shadow-core::command::rdp_file` и `mstsc_shadow_args`; `platform::run_mstsc` пишет временный `.rdp` и запускает `mstsc <file> /shadow:<id>` (проброс `rdp_port`)
+- Evidence: `cargo test -p rds-shadow-core` 22 passed (3 новых); `cargo fmt --check` ok; `cargo clippy --target x86_64-pc-windows-gnu -p rds-shadow --all-targets -- -D warnings` exit 0; `cargo check --workspace` exit 0
+- Docs: [[decisions/0005-shadow-viewer-wgc]], [[architecture/tz-v1-draft]], [[STATUS]]
+
+## 2026-11-19 — WGC-окно: v6 (основная концепция, управляемая мини-карта, помощь по функциям)
+- Changes: макет `07-shadow-display-v6.html` — F принят за основную концепцию; мини-карта управляемая (кнопка «Мини-карта», `Ctrl+M`, появление при масштабировании); окно помощи описывает функции окна с кратким пояснением, убран очевидный нативный UI и мета; 7.3 сокращён до мини-карты и запоминания; ТЗ §8 и решение 0005 обновлены
+- Evidence: v6 balance div 116/116, section 6/6, script 1/1; в помощи нет строк про перетаскивание/лупу; есть minimap-toggle и Ctrl+M; код не менялся
+- Docs: [[decisions/0005-shadow-viewer-wgc]], [[architecture/tz-v1-draft]], [[architecture/gui-map]]
+
+## 2026-11-19 — WGC-окно: компоновка v5
+- Changes: макет `07-shadow-display-v5.html` — сеанс в заголовке (перетаскивание), режим и масштаб в подвале, подсказки плашкой 5 с → «?» → панель слева; убраны кнопки выбора монитора (#1/#2/#3); ТЗ §8 дополнено компоновкой окна
+- Evidence: v5 balance div 116/116, section 6/6, script 1/1; в окне WGC нет левой панели и кнопок мониторов; код не менялся
+- Docs: [[architecture/tz-v1-draft]], [[architecture/gui-map]]
+
+## 2026-11-19 — Shadow multi-monitor: пояснения вне окна (v4) + решение 0005
+- Changes: макет `07-shadow-display-v4.html` — пояснительная проза вынесена из панели окна в блоки «не часть окна»; панель E/F — только операционные элементы; зафиксированы выборы (Детали 1:1, монитор RDS Shadow, WGC, все доп.); ТЗ §8 дополнено разделом отображения; решение 0005 (WGC, план, риски); в `ui-standard.md` правило «пояснения вне окна»
+- Evidence: v4 balance div 123/123, section 6/6, script 1/1, label 15/15, 2 блока `.annot`; код не менялся (WGC — Windows-only, нужен стенд)
+- Docs: [[decisions/0005-shadow-viewer-wgc]], [[architecture/tz-v1-draft]], [[architecture/ui-standard]], [[architecture/gui-map]]
+
+## 2026-11-19 — Shadow multi-monitor: контекст к вопросам (v3)
+- Changes: макет `07-shadow-display-v3.html` — у каждого вопроса (7.1–7.4) добавлен короткий контекст «что спрашивается / что это не значит / ограничения»; уточнены подписи 7.2; в `ui-standard.md` закреплено правило «у каждого вопроса — контекст»; v1 и v2 сохранены
+- Evidence: 4 блока `.qctx`; баланс v3 div 116/116, script 1/1, label 15/15; код не менялся
+- Docs: [[architecture/ui-standard]], [[architecture/gui-map]]
+
+## 2026-11-19 — Shadow multi-monitor: smart sizing и встраивание
+- Changes: доисследованы smart sizing на лету (без переподключения) и встраивание сеанса (SetParent / WGC / ActiveX); макет `07-shadow-display-v2.html` с выборами (radio/checkbox) и авто-промтом; в `ui-standard.md` зафиксированы версионирование макетов и механизм выборов; v1 сохранён
+- Evidence: Microsoft Learn (SetParent, WGC, DWM, MsTscAx), woshub/superuser (smart sizing на лету); код не менялся
+- Docs: [[research/2026-11-19-shadow-multimonitor-visualization]], [[architecture/ui-standard]], [[architecture/gui-map]]
+
+## 2026-11-19 — Shadow multi-monitor visualization
+- Changes: research-бриф по визуализации shadow при 2–3 мониторах; макет `07-shadow-display.html` (обзор / детали 1:1 / три монитора / диалог «Отображение»); вопросы 7.1–7.3 размечены
+- Evidence: разобраны возможности mstsc (smart sizing, scroll, /span, selectedmonitors) по внешним источникам; код не менялся
+- Docs: [[research/2026-11-19-shadow-multimonitor-visualization]], [[architecture/gui-map]]
+
+## 2026-11-19 — RDP-Tcp rights editor archived
+- Changes: редактор прав RDP-Tcp вынесен в `archive/rdp-tcp-permissions/` (код `rights.rs`, макет `05-permissions.html`, скрипт `setup-rdp-tcp-permissions.ps1`, копия гайда `deployment-ad-gpo.full.md`); удалён из `lib.rs`/`app.rs` и из интерфейса (макеты 01–04, 06, `index.html`); живой гайд сокращён до требований и указателя на архив; ТЗ §2 дополнено
+- Evidence: `cargo check --target x86_64-pc-windows-gnu -p rds-shadow` exit 0; `cargo clippy --target x86_64-pc-windows-gnu -p rds-shadow --all-targets -- -D warnings` exit 0; `cargo check --workspace` exit 0; в `crates/rds-shadow/src` нет ссылок `rights`/`PermEditor`/`Права RDP-Tcp`
+- Docs: [[decisions/0004-archive-rdp-tcp-rights-editor]], [[guides/deployment-ad-gpo]], [[architecture/tz-v1-draft]]
+
+## 2026-11-19 — UI standard and plugin model (from depesha)
+- Changes: приняты стандарт интерфейса и модель плагинов по мотивам `fgbm/depesha`; research-бриф, `architecture/ui-standard.md`, `architecture/plugin-model.md`, решение 0003
+- Evidence: клон depesha прочитан (`AGENTS.md`, `design/mockups/`, `scripts/`, `e2e/`, `plugins/README.md`, `src/plugin-api/`); код RDS Shadow не менялся
+- Docs: [[architecture/ui-standard]], [[architecture/plugin-model]], [[decisions/0003-ui-and-plugin-standard]], [[research/2026-11-19-llm-checkable-ui-and-plugins]]
+
+## 2026-11-19 — GUI mockups markup
+- Changes: доразметка `gui_html/rds-shadow/` (01–06): семантика aria/role, стабильные data-testid, контракт вопросов data-q/data-variant; карта экранов `architecture/gui-map.md`
+- Evidence: баланс тегов сведён (div/button без расхождений); 4 открытых вопроса размечены (1.1, 2.1, 3.1, 4.1)
+- Docs: [[architecture/gui-map]], [[architecture/ui-standard]]
+
+## 2026-11-19 — GUI decisions applied
+- Changes: применены решения 1.1 (кнопки в панели), 2.1 (акцент на «Управление»), 3.1 (без «Отменить», поток logoff с опросом 2 с / 40 с), 4.1 (колонка «Теневой доступ»); ТЗ §8 дополнено поведением logoff
+- Evidence: макеты 01/02/04/05 обновлены; `gui-map.md` — таблица решений и политика опроса; баланс div сохранён
+- Docs: [[architecture/gui-map]], [[architecture/tz-v1-draft]]
+
 ## 2026-11-18 12:00 UTC — Remote Desktop Users requirement
 - Changes: `mstsc /shadow` также требует права входа (Remote Desktop Users); скрипт теперь добавляет группы туда (`-SkipRemoteDesktopUsers` отключает); гайд дополнен разделом 3.3
 - Evidence: подтверждено на стенде — после добавления в Remote Desktop Users shadow заработало

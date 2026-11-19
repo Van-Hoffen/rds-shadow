@@ -18,19 +18,18 @@
   <div class="app twocol">
     <div class="side">
       <div class="brand"><span class="logo" style="background:var(--accent)"><svg class="i"><use href="#i-shield"/></svg></span>RDS Shadow<span class="version">0.3.0</span></div>
-      <div class="scroll">
+      <div class="scroll" role="navigation" aria-label="Разделы">
         <div class="group-label">Ферма</div>
-        <button class="item active"><span class="name">Сеансы</span><span class="badge">23</span></button>
-        <button class="item quiet"><span class="name">Права RDP-Tcp</span></button>
+        <button class="item active" aria-current="page"><span class="name">Сеансы</span><span class="badge">23</span></button>
         <button class="item quiet"><span class="name">Журнал</span></button>
       </div>
       <div class="foot">
-        <button class="foot-btn on" onclick="document.body.classList.toggle('night')"><svg class="i"><use href="#i-moon"/></svg></button>
+        <button class="foot-btn on" aria-label="Переключить тему" onclick="document.body.classList.toggle('night')"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></button>
         <span class="spacer"></span>
       </div>
     </div>
     <div class="list">
-      <div class="list-head"><div class="search"><input type="text" placeholder="поиск"></div></div>
+      <div class="list-head"><div class="search"><input type="text" aria-label="Поиск сеансов" data-testid="search" placeholder="поиск"></div></div>
       <div class="list-title"><b>Сеансы</b><span>23</span></div>
       <div class="rows">
         <div class="srow selected"><span class="ava">ИВ</span><span class="meta"><span class="user">user_iv</span><span class="host">ts01 · rdp-tcp#29</span></span><span class="id">12</span><span class="tag active">активен</span></div>
@@ -42,8 +41,8 @@
 
   <!-- modal -->
   <div class="backdrop">
-    <div class="modal">
-      <h3>Подключение к user_iv</h3>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+      <h3 id="connect-title">Подключение к user_iv</h3>
       <p class="text">Выберите режим подключения к сеансу на <b>ts01</b> (ID 12).</p>
       <div class="detail-box">
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
@@ -55,9 +54,9 @@
       </div>
       <p class="small muted" style="margin:0">Сотрудник получит запрос и должен согласиться на подключение.</p>
       <div class="buttons">
-        <button class="btn ghost left">Отмена</button>
-        <button class="btn"><svg class="i"><use href="#i-eye"/></svg>Просмотр</button>
-        <button class="btn primary"><svg class="i"><use href="#i-ctrl"/></svg>Управление</button>
+        <button class="btn ghost left" data-testid="connect-cancel">Отмена</button>
+        <button class="btn" data-testid="connect-view" data-q="2.1" data-variant="Б"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg>Просмотр</button>
+        <button class="btn primary" data-testid="connect-control" data-q="2.1" data-variant="А"><svg class="i" aria-hidden="true"><use href="#i-ctrl"/></svg>Управление</button>
       </div>
     </div>
   </div>
@@ -65,5 +64,6 @@
 </div>
 
 <p class="cap"><b>02 · Подключение.</b> Перед подключением специалист выбирает режим. Просмотр — по умолчанию и без ввода; управление — отдельная кнопка с акцентом и явным объяснением. Подчёркнуто, что сотрудник даёт согласие (программа не обходит его).</p>
+<p class="cap" data-q="2.1" data-q-title="Акцент на кнопке режима" data-recommended="А">Решено 2.1: <b>А</b> — акцент на «Управление». Программа заточена на оказание поддержки сотрудникам, работающим на RDS, поэтому основной путь — управление. Вариант <b>Б</b> (акцент на «Просмотр») отклонён.</p>
 </body>
 </html>

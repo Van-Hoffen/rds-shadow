@@ -1,7 +1,7 @@
 # Handoff: RDS Shadow
 
-- **Date:** 2026-11-18 11:10 UTC
-- **Status:** repo bootstrapped; CI green; GUI + RDP-Tcp rights editor; pre-releases v0.1.0–v0.2.0; not tested on a stand
+- **Date:** 2026-11-19
+- **Status:** repo bootstrapped; CI green; GUI; RDP-Tcp rights editor archived (не в продукте); pre-releases v0.1.0–v0.2.0; not tested on a stand
 - **Repo:** https://github.com/Van-Hoffen/rds-shadow (`main`, `9b86f91`)
 - **Docs:** docs/STATUS.md
 - **TZ:** docs/architecture/tz-v1-draft.md
@@ -11,6 +11,7 @@
 ## Now
 
 - First CI run is green on Linux and Windows.
+- RDP-Tcp rights editor archived to `archive/rdp-tcp-permissions/`; removed from code and UI (decision 0004).
 - Local toolchain installed: Rust 1.100, fmt, clippy; Windows gnu target and mingw for cross-check.
 - Do not test logoff on a production session.
 

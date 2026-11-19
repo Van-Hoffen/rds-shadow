@@ -14,9 +14,9 @@
 <div class="stage" style="justify-content:center">
 <div class="frame mid">
   <div class="settings" style="position:absolute;inset:0">
-    <div class="pages">
+    <div class="pages" role="navigation" aria-label="Страницы настроек">
       <h3 style="margin:0 8px 12px;font-size:15px">Настройки</h3>
-      <button class="tab on" style="width:100%;text-align:left;padding:7px 10px;border:none;background:var(--selected);border-radius:6px;font-size:13px">Подключение</button>
+      <button class="tab on" aria-current="page" style="width:100%;text-align:left;padding:7px 10px;border:none;background:var(--selected);border-radius:6px;font-size:13px">Подключение</button>
       <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Группы</button>
       <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Журнал</button>
       <button class="tab" style="width:100%;text-align:left;padding:7px 10px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink)">Интерфейс</button>
@@ -25,22 +25,22 @@
       <h2>Подключение</h2>
       <section>
         <h4>Источник сеансов</h4>
-        <div class="option"><input type="radio" name="mode" checked><span class="text">Брокер (RD Connection Broker)</span></div>
-        <div class="option"><input type="radio" name="mode"><span class="text">Список серверов</span></div>
+        <div class="option"><input type="radio" name="mode" data-testid="mode-broker" aria-label="Брокер (RD Connection Broker)" checked><span class="text">Брокер (RD Connection Broker)</span></div>
+        <div class="option"><input type="radio" name="mode" data-testid="mode-servers" aria-label="Список серверов"><span class="text">Список серверов</span></div>
       </section>
       <section>
         <h4>Брокер</h4>
-        <input type="text" value="broker.example.domain">
+        <input type="text" aria-label="Брокер" data-testid="broker" value="broker.example.domain">
         <p class="note">Используется при режиме «Брокер».</p>
       </section>
       <section>
         <h4>Список серверов</h4>
-        <input type="text" value="ts01, ts02, ts03">
+        <input type="text" aria-label="Список серверов" data-testid="servers-list" value="ts01, ts02, ts03">
         <p class="note">Через запятую. Используется при режиме «Список серверов».</p>
       </section>
       <section>
         <h4>Порт RDP</h4>
-        <input type="text" value="3389" style="width:120px">
+        <input type="text" aria-label="Порт RDP" data-testid="rdp-port" value="3389" style="width:120px">
       </section>
     </div>
   </div>
@@ -48,5 +48,6 @@
 </div>
 
 <p class="cap"><b>06 · Настройки.</b> Настройки слоями, как в депеше: слева — страницы, справа — параметры. Секции «Подключение», «Группы», «Журнал», «Интерфейс» (язык/тема). Значения пишутся в INI, не в код; в репозитории — только пример без боевых имён.</p>
+<p class="cap">Пробел: нарисована только страница «Подключение». Страницы «Группы» (view/control/logoff), «Журнал» (log_dir/share_dir) и «Интерфейс» (язык/тема) заявлены в INI (ТЗ §7), но их вид не нарисован — дорисовать перед реализацией.</p>
 </body>
 </html>

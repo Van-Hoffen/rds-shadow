@@ -9,7 +9,7 @@ pub mod event;
 pub mod filter;
 pub mod writer;
 
-pub use command::mstsc_args;
+pub use command::{mstsc_args, mstsc_shadow_args, rdp_file};
 pub use config::{Config, ConfigError, ConnectionMode};
 pub use event::{AuditEvent, EventKind, ResultKind};
 pub use filter::EventFilter;

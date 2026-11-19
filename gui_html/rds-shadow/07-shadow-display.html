@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>07 · Теневое подключение и несколько мониторов</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .docwrap { width: 1180px; max-width: 100%; margin: 30px auto 80px; padding: 0 20px; }
+  .docwrap h1 { font-size: 22px; margin: 0 0 8px; }
+  .docwrap .lead { color: #3b4350; line-height: 1.55; max-width: 920px; }
+  body.night .docwrap .lead { color: #b8bec6; }
+  .docwrap section { margin: 30px 0; }
+  .docwrap h2 { font-size: 17px; margin: 0 0 10px; display: flex; gap: 8px; align-items: baseline; }
+  .docwrap h2 .num { font-family: var(--mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+  .docwrap .cap { max-width: 1000px; }
+
+  /* RDP window chrome */
+  .rdpwin { width: 980px; max-width: 100%; border-radius: 10px; overflow: hidden; background: #fff; color: #1a1a1a; border: 1px solid #cfcfcf; box-shadow: 0 12px 32px rgb(0 0 0 / 20%); }
+  .tbar { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; background: #f3f3f3; border-bottom: 1px solid #dcdcdc; font-size: 12px; color: #333; }
+  .tbar .ic { width: 14px; height: 14px; border-radius: 3px; background: var(--accent); flex: none; }
+  .tbar .ttl { font-weight: 600; }
+  .tbar .sp { flex: 1; }
+  .tbar .wc { display: flex; gap: 9px; color: #777; font-family: var(--mono); font-size: 12px; }
+  .client { position: relative; background: #6f6f6f; overflow: hidden; }
+
+  /* virtual desktop */
+  .desk { display: flex; gap: 6px; padding: 8px; background: linear-gradient(160deg,#1b2530,#101820); }
+  .mon { position: relative; background: radial-gradient(120% 120% at 30% 10%, #2a3a4a, #0f1720 70%); border: 1px solid #33465a; border-radius: 4px; overflow: hidden; }
+  .mlabel { position: absolute; top: 3px; left: 4px; font: 10px/1 var(--mono); color: #8fb0d0; opacity: .85; }
+  .fw { position: absolute; background: #fff; border-radius: 3px; box-shadow: 0 2px 6px rgb(0 0 0 / 35%); padding: 4px; }
+  .fw .h { height: 5px; background: #dbe3ee; border-radius: 2px; margin-bottom: 3px; }
+  .fw i { display: block; height: 3px; background: #c4ccd6; border-radius: 2px; margin: 3px 0; }
+  .fw i.short { width: 58%; }
+
+  /* fit (overview) */
+  .fitdesk { align-items: stretch; }
+  .fitdesk .mon { flex: 1; height: 168px; }
+
+  /* detail 1:1 */
+  .client.detail { height: 300px; }
+  .desk.big { width: 1500px; height: 288px; gap: 6px; }
+  .desk.big .mon { height: 272px; }
+  .desk.big .mon:first-child { flex: 0 0 900px; }
+  .desk.big .mon:last-child { flex: 1; }
+  .desk.big .fw { padding: 7px; }
+  .desk.big .fw .h { height: 8px; }
+  .desk.big .fw i { height: 4px; margin: 5px 0; }
+  .desk.big .fw i.txt { background: #9aa6b3; }
+
+  /* scrollbars */
+  .sbv { position: absolute; right: 0; top: 0; width: 12px; height: calc(100% - 12px); background: #e6e6e6; }
+  .sbv::after { content: ""; position: absolute; left: 2px; right: 2px; top: 20%; height: 22%; background: #a9a9a9; border-radius: 5px; }
+  .sbh { position: absolute; left: 0; bottom: 0; width: calc(100% - 12px); height: 12px; background: #e6e6e6; }
+  .sbh::after { content: ""; position: absolute; top: 2px; bottom: 2px; left: 26%; width: 20%; background: #a9a9a9; border-radius: 5px; }
+
+  /* minimap */
+  .minimap { position: absolute; right: 16px; bottom: 18px; width: 150px; height: 92px; background: #0b1117; border: 1px solid #55606c; border-radius: 6px; box-shadow: 0 6px 16px rgb(0 0 0 / 40%); }
+  .minimap .mm-h { position: absolute; top: -18px; left: 0; font: 10px/1 var(--mono); color: #cdd7e2; }
+  .minimap .m { position: absolute; background: #2a3a4a; border: 1px solid #46586b; border-radius: 2px; }
+  .minimap .vp { position: absolute; border: 2px solid #ffd166; border-radius: 2px; background: rgb(255 209 102 / 12%); }
+
+  /* overlay chips */
+  .ovl { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+  .chip { font-size: 12px; padding: 3px 9px; border-radius: 14px; background: rgb(20 28 36 / 72%); color: #e8eef4; border: 1px solid rgb(255 255 255 / 18%); }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+  /* three-monitor layout */
+  .client.three { background: #101820; padding: 10px; }
+  .three .layout { position: relative; display: flex; gap: 6px; align-items: flex-end; height: 250px; }
+  .three .mon { border-radius: 4px; }
+  .three .mL { flex: 0 0 300px; height: 178px; align-self: flex-start; }
+  .three .mP { flex: 0 0 132px; height: 250px; }
+  .three .m4k { flex: 0 0 340px; height: 200px; align-self: center; }
+  .three .bbox { position: absolute; inset: 2px 6px 2px 2px; border: 1px dashed #7fb0ec; border-radius: 6px; pointer-events: none; }
+  .three .bbox .bl { position: absolute; top: -16px; left: 0; font: 10px/1 var(--mono); color: #9cc0ea; }
+
+  /* start dialog (our app) */
+  .startdlg { width: 520px; max-width: 100%; }
+  .startdlg .opt { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; }
+  .startdlg .opt .t { flex: 1; }
+  .startdlg .opt b { display: block; }
+  .startdlg .opt .d { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .startdlg select, .startdlg input[type="text"] { width: 100%; }
+
+  .qblock { margin-top: 30px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); }
+  .qblock h3 { margin: 0 0 8px; font-size: 14px; }
+  .qblock p { margin: 6px 0; line-height: 1.5; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="docwrap">
+<h1>07 · Теневое подключение к сеансу с 2–3 мониторами</h1>
+<p class="lead">Когда у сотрудника 2–3 монитора (разные разрешения, ориентация и пропорции), <code>mstsc /shadow</code> показывает <b>весь</b> виртуальный стол одной широкой поверхностью, и в окне всё мелкое. Выбрать один удалённый монитор нативно нельзя; окно shadow открывается на одном локальном мониторе. Ниже — варианты управления визуализацией и то, что реально может дать наш клиент.</p>
+
+<!-- A. Overview -->
+<section>
+<h2><span class="num">A</span> Обзор: весь стол вписан в окно</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 12 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client">
+      <div class="desk fitdesk">
+        <div class="mon">
+          <div class="mlabel">Монитор 1 · 1920×1080</div>
+          <div class="fw" style="left:26px;top:46px;width:150px"><div class="h"></div><i></i><i class="short"></i></div>
+          <div class="fw" style="right:22px;bottom:20px;width:180px;height:78px"><div class="h"></div><i></i><i></i><i class="short"></i></div>
+        </div>
+        <div class="mon">
+          <div class="mlabel">Монитор 2 · 1920×1080</div>
+          <div class="fw" style="left:30px;top:24px;width:200px;height:92px"><div class="h"></div><i></i><i></i><i></i><i class="short"></i></div>
+          <div class="fw" style="right:30px;bottom:34px;width:150px"><div class="h"></div><i></i><i class="short"></i></div>
+        </div>
+      </div>
+      <div class="ovl"><span class="chip on">Обзор</span><span class="chip">Детали 1:1</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>Вариант A — «Обзор».</b> <code>smart sizing:i:1</code>: весь широкий стол вписан в окно. Видно всё и курсор, но текст мелкий. Это то, что происходит сейчас. Подходит, чтобы понять «где сотрудник и что у него на экранах», не для чтения.</p>
+</section>
+
+<!-- B. Detail 1:1 -->
+<section>
+<h2><span class="num">B</span> Детали 1:1: нативно и прокрутка к монитору</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 12 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client detail">
+      <div class="desk big">
+        <div class="mon">
+          <div class="mlabel">Монитор 1 · 1920×1080</div>
+          <div class="fw" style="left:40px;top:70px;width:300px;height:150px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i><i class="txt"></i></div>
+          <div class="fw" style="right:40px;bottom:26px;width:280px;height:110px"><div class="h"></div><i class="txt"></i><i class="txt"></i><i class="txt short"></i></div>
+        </div>
+        <div class="mon">
+          <div class="mlabel">Монитор 2 · 1920×1080</div>
+          <div class="fw" style="left:40px;top:40px;width:300px;height:130px"><div class="h"></div><i class="txt"></i><i class="txt"></i></div>
+        </div>
+      </div>
+      <div class="minimap" aria-hidden="true">
+        <span class="mm-h">весь стол</span>
+        <div class="m" style="left:8px;top:12px;width:64px;height:62px"></div>
+        <div class="m" style="right:8px;top:12px;width:64px;height:62px"></div>
+        <div class="vp" style="left:8px;top:12px;width:38px;height:34px"></div>
+      </div>
+      <div class="sbv" aria-hidden="true"></div><div class="sbh" aria-hidden="true"></div>
+      <div class="ovl"><span class="chip">Обзор</span><span class="chip on">Детали 1:1</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>Вариант B — «Детали 1:1».</b> <code>smart sizing:i:0</code>: пиксель в пиксель, окно меньше стола → полосы прокрутки, прокрутка к нужному монитору. Плюс — текст читаем. Минус — не видно всё сразу, нужна навигация. Мини-карта в углу (опционально, если раскладку можно узнать) помогает прыгать к монитору. Это рекомендуемый режим для чтения на мультимониторном сеансе.</p>
+</section>
+
+<!-- C. Three different monitors -->
+<section>
+<h2><span class="num">C</span> Три монитора разного размера, ориентации и пропорций</h2>
+<div class="stage">
+  <div class="rdpwin">
+    <div class="tbar"><span class="ic"></span><span class="ttl">ts01 · сеанс 7 (теневое подключение)</span><span class="sp"></span><span class="wc">— ▢ ✕</span></div>
+    <div class="client three">
+      <div class="layout">
+        <div class="bbox"><span class="bl">общая поверхность стола ≈ 6160 × 2160</span></div>
+        <div class="mon mL"><div class="mlabel">#1 · 1920×1080 · альбом</div></div>
+        <div class="mon mP"><div class="mlabel">#2 · 1080×1920 · книга</div></div>
+        <div class="mon m4k"><div class="mlabel">#3 · 3840×2160 · альбом</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>Вариант C — «Как это выглядит».</b> При трёх мониторах разной ориентации и разрешения общая поверхность — очень широкая и высокая (книжный монитор тянет высоту вверх). <code>mstsc</code> показывает её целиком; один удалённый монитор выбрать нельзя. Приём: «Детали 1:1» + прокрутка к монитору с нужным окном. Точную раскладку сотрудника надёжно узнать нельзя, поэтому карта — иллюстративная.</p>
+</section>
+
+<!-- D. Our start dialog -->
+<section>
+<h2><span class="num">D</span> Что даёт наш клиент: диалог «Отображение» перед подключением</h2>
+<div class="stage">
+  <div class="frame mid" style="width: 560px; height: auto; padding: 0">
+    <div class="modal" style="position: static; width: auto; box-shadow: none; border-radius: 0">
+      <h3>Отображение теневого сеанса</h3>
+      <p class="text small muted" style="margin:0">Сеанс <b>user_iv</b> · ts01 · ID 12. У сотрудника несколько мониторов.</p>
+      <div class="detail-box">
+        <div class="opt"><input type="radio" name="dmode" data-testid="dmode-fit"><span class="t"><b>Обзор</b><span class="d">Вписать весь стол в окно. Видно всё, текст мелкий.</span></span></div>
+        <div class="opt"><input type="radio" name="dmode" data-testid="dmode-detail" checked><span class="t"><b>Детали 1:1</b><span class="d">Нативно, с прокруткой. Читаемо; перейти к нужному монитору прокруткой.</span></span></div>
+      </div>
+      <div class="field">
+        <label for="dmon">Открыть на мониторе</label>
+        <select id="dmon" data-testid="dmon">
+          <option>Мой монитор 1 (основной)</option>
+          <option>Мой монитор 2</option>
+          <option>Разложить на мои мониторы (если совпадают)</option>
+        </select>
+      </div>
+      <div class="option"><input type="checkbox" data-testid="dremember" checked><span class="text">Запомнить для узла ts01</span></div>
+      <p class="small muted" style="margin:0">Согласие сотрудника обязательно; программа его не обходит. Приём «лупа ОС» (Win + «+») помогает читать без смены режима.</p>
+      <div class="buttons">
+        <button class="btn ghost left" data-testid="dismiss">Отмена</button>
+        <button class="btn primary" data-testid="launch">Подключиться</button>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap"><b>Вариант D — управление от нашего клиента.</b> Мы не рисуем картинку сами (свой RDP-стек вне v1). Реально мы можем: сформировать временный <code>.rdp</code> с нужным <code>smart sizing</code>/<code>screen mode</code>, запустить <code>mstsc &lt;file&gt; /shadow:&lt;id&gt;</code> и разместить окно на выбранном локальном мониторе. Режим «Обзор / Детали» и монитор запоминаются на узел.</p>
+</section>
+
+<div class="qblock" data-q="7.1" data-q-title="Режим по умолчанию для мультимониторного сеанса" data-variants="А,Б" data-recommended="Б">
+  <h3>Вопрос 7.1 — режим по умолчанию</h3>
+  <p><b>А</b> — «Обзор» по умолчанию (видно всё, но мелко; переключение в детали вручную).</p>
+  <p><b>Б</b> — «Детали 1:1» по умолчанию, если общая ширина стола больше локального монитора; иначе — «Обзор» (авто). Рекомендация: <b>Б</b> — сразу читаемо, это и есть боль.</p>
+</div>
+
+<div class="qblock" data-q="7.2" data-q-title="Куда открывать окно shadow" data-variants="А,Б,В" data-recommended="А">
+  <h3>Вопрос 7.2 — размещение окна</h3>
+  <p><b>А</b> — на мониторе, где открыт наш клиент (текущий). <b>Б</b> — на выбранном пользователем. <b>В</b> — «разложить на мои мониторы» (<code>/span</code>, только при совпадении разрешений; для shadow не гарантировано). Рекомендация: <b>А</b> с возможностью выбрать (Б).</p>
+</div>
+
+<div class="qblock" data-q="7.3" data-q-title="Подсказка про лупу ОС" data-variants="А,Б" data-recommended="А">
+  <h3>Вопрос 7.3 — лупа ОС</h3>
+  <p><b>А</b> — показывать подсказку «Win + “+” — лупа» в диалоге. <b>Б</b> — не показывать. Рекомендация: <b>А</b>, дешёвый способ читать без смены режима.</p>
+</div>
+
+</div>
+</body>
+</html>

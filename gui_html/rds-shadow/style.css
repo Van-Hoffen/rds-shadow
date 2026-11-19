@@ -59,6 +59,7 @@ svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-widt
 .btn:disabled { opacity: .45; cursor: default; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
+.mono { font-family: var(--mono); }
 kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
 
 input[type="text"], input[type="password"], select, textarea {

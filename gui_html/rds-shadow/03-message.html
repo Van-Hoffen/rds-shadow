@@ -16,15 +16,14 @@
   <div class="app twocol">
     <div class="side">
       <div class="brand"><span class="logo"><svg class="i"><use href="#i-msg"/></svg></span>RDS Shadow<span class="version">0.3.0</span></div>
-      <div class="scroll">
-        <button class="item active"><span class="name">Сеансы</span></button>
-        <button class="item quiet"><span class="name">Права RDP-Tcp</span></button>
+      <div class="scroll" role="navigation" aria-label="Разделы">
+        <button class="item active" aria-current="page"><span class="name">Сеансы</span></button>
         <button class="item quiet"><span class="name">Журнал</span></button>
       </div>
-      <div class="foot"><button class="foot-btn on" onclick="document.body.classList.toggle('night')"><svg class="i"><use href="#i-moon"/></svg></button><span class="spacer"></span></div>
+      <div class="foot"><button class="foot-btn on" aria-label="Переключить тему" onclick="document.body.classList.toggle('night')"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></button><span class="spacer"></span></div>
     </div>
     <div class="list">
-      <div class="list-head"><div class="search"><input type="text" placeholder="поиск"></div></div>
+      <div class="list-head"><div class="search"><input type="text" aria-label="Поиск сеансов" data-testid="search" placeholder="поиск"></div></div>
       <div class="list-title"><b>Сеансы</b><span>23</span></div>
       <div class="rows">
         <div class="srow selected"><span class="ava">ИВ</span><span class="meta"><span class="user">user_iv</span><span class="host">ts01 · rdp-tcp#29</span></span><span class="id">12</span><span class="tag active">активен</span></div>
@@ -33,14 +32,14 @@
   </div>
 
   <div class="backdrop">
-    <div class="modal" style="width:520px">
-      <h3>Сообщение сотруднику</h3>
+    <div class="modal" style="width:520px" role="dialog" aria-modal="true" aria-labelledby="msg-title">
+      <h3 id="msg-title">Сообщение сотруднику</h3>
       <p class="text small muted" style="margin:0">Текст появится на экране <b>user_iv</b> (ts01, ID 12).</p>
-      <textarea rows="5" placeholder="Например: «Позвоните, пожалуйста, в поддержку по заявке SD-12345»"></textarea>
+      <textarea rows="5" aria-label="Текст сообщения" data-testid="message-text" placeholder="Например: «Позвоните, пожалуйста, в поддержку по заявке SD-12345»"></textarea>
       <p class="danger-note" style="margin:0">Не отправляйте персональные данные и закрытую информацию. Сообщение сохраняется в журнале.</p>
       <div class="buttons">
-        <button class="btn ghost left">Отмена</button>
-        <button class="btn primary"><svg class="i"><use href="#i-msg"/></svg>Отправить</button>
+        <button class="btn ghost left" data-testid="message-cancel">Отмена</button>
+        <button class="btn primary" data-testid="message-send"><svg class="i" aria-hidden="true"><use href="#i-msg"/></svg>Отправить</button>
       </div>
     </div>
   </div>
