@@ -10,6 +10,7 @@
 
 - `rds-shadow-core`: INI, события, JSONL, фильтры, `mstsc_args`, `rdp_file`, `mstsc_shadow_args`
 - Этап 1 отображения shadow (WGC): генерация `.rdp` и запуск `mstsc <file> /shadow` в ядре (решение 0005); проверка на стенде — не сделана
+- Релиз `v0.3.1`: тег запушен, release workflow запущен (сборка Windows + Linux)
 - `rds-shadow-audit`: фильтры и CSV
 - CI и release workflows
 - CI #1, #3, #6 на GitHub: Linux и Windows — success

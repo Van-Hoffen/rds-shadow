@@ -7,6 +7,11 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-19 — Release v0.3.1
+- Changes: закоммичена вся работа (этап 1 отображения shadow, стандарты интерфейса/плагинов, макеты 01–06 и 07 v1–v6, архив прав, решения 0003–0005); версия поднята до 0.3.1 (v0.3.0 уже был занят редактором прав); тег `v0.3.1` запушил → release workflow запущен
+- Evidence: `git push` ok (main f5e40f1..e66a2b2, new tag v0.3.1); локально `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`, `cargo test --workspace` (22) — зелёные
+- Docs: [[STATUS]]
+
 ## 2026-11-19 — Этап 1 генерации .rdp + запуска; правка про горячие клавиши
 - Changes: принято без нового макета — горячие клавиши функций WGC-окна настраиваются в разделе «Горячие клавиши» настроек (ТЗ §8, решение 0005, gui-map). Этап 1 реализован: `rds-shadow-core::command::rdp_file` и `mstsc_shadow_args`; `platform::run_mstsc` пишет временный `.rdp` и запускает `mstsc <file> /shadow:<id>` (проброс `rdp_port`)
 - Evidence: `cargo test -p rds-shadow-core` 22 passed (3 новых); `cargo fmt --check` ok; `cargo clippy --target x86_64-pc-windows-gnu -p rds-shadow --all-targets -- -D warnings` exit 0; `cargo check --workspace` exit 0
