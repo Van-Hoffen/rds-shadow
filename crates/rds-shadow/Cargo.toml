@@ -20,11 +20,14 @@ path = "src/main.rs"
 name = "rds-shadow-cli"
 path = "src/bin/rds-shadow-cli.rs"
 
-[target.'cfg(windows)'.dependencies]
-rds-shadow-core = { path = "../rds-shadow-core" }
-clap = { version = "4.5", features = ["derive"] }
-chrono.workspace = true
+[dependencies]
+serde.workspace = true
 serde_json.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+clap = { version = "4.5", features = ["derive"] }
+
+[target.'cfg(windows)'.dependencies]
 eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow"] }
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",

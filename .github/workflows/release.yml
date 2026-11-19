@@ -33,42 +33,18 @@ jobs:
           name: rds-shadow-windows-x64
           path: dist/rds-shadow-windows-x64.zip
 
-  linux:
-    name: Linux x64
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Build viewer
-        run: cargo build --release -p rds-shadow-audit
-      - name: Package
-        run: |
-          name="rds-shadow-audit-linux-x64"
-          mkdir -p "dist/$name"
-          cp target/release/rds-shadow-audit "dist/$name/"
-          tar -C dist -czf "dist/$name.tar.gz" "$name"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: rds-shadow-audit-linux-x64
-          path: dist/rds-shadow-audit-linux-x64.tar.gz
-
   publish:
     name: Publish GitHub Release
-    needs: [windows, linux]
+    needs: [windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
 
       - name: Check tag matches workspace version
         shell: bash
         run: |
           set -euo pipefail
-          version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+          version=$(grep -m1 '^version = ' Cargo.toml | sed -E 's/version = "([^"]+)"/\1/')
           expected="v$version"
           tag="${GITHUB_REF_NAME}"
           echo "tag=$tag version=$version"
@@ -76,12 +52,6 @@ jobs:
             echo "::error::tag $tag does not match workspace version $version (expected $expected)"
             exit 1
           fi
-
-      - name: Lint and test
-        run: |
-          cargo fmt --all --check
-          cargo clippy --workspace --all-targets -- -D warnings
-          cargo test --workspace
 
       - uses: actions/download-artifact@v8
         with:
@@ -95,7 +65,6 @@ jobs:
         with:
           files: |
             dist/rds-shadow-windows-x64.zip
-            dist/rds-shadow-audit-linux-x64.tar.gz
           generate_release_notes: true
           fail_on_unmatched_files: true
           prerelease: ${{ startsWith(github.ref_name, 'v0.') }}

@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::process::{Command, ExitStatus};
 
-use rds_shadow_core::config::{Config, ConnectionMode};
+use crate::config::{Config, ConnectionMode};
 use windows_sys::Win32::Foundation::{
     GetLastError, LocalFree, BOOL, ERROR_INSUFFICIENT_BUFFER, HANDLE, HLOCAL,
 };
@@ -312,10 +312,10 @@ pub fn run_mstsc(
     control: bool,
     port: u16,
 ) -> std::io::Result<ExitStatus> {
-    let rdp = rds_shadow_core::command::rdp_file(server, port);
+    let rdp = crate::command::rdp_file(server, port);
     let path = std::env::temp_dir().join(format!("rds-shadow-{session}.rdp"));
     std::fs::write(&path, rdp)?;
-    let args = rds_shadow_core::command::mstsc_shadow_args(path.as_path(), session, control);
+    let args = crate::command::mstsc_shadow_args(path.as_path(), session, control);
     Command::new("mstsc.exe").args(&args).status()
 }
 

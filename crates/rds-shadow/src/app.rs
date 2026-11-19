@@ -2,9 +2,9 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use crate::config::{Config, Language};
+use crate::event::{ActionMode, AuditEvent, EventKind, ResultKind};
 use eframe::egui;
-use rds_shadow_core::config::{Config, Language};
-use rds_shadow_core::event::{ActionMode, AuditEvent, EventKind, ResultKind};
 
 use crate::audit;
 use crate::platform;
@@ -86,7 +86,7 @@ impl App {
     }
 
     fn load_config(&mut self) {
-        match rds_shadow_core::config::load(&self.cfg_path) {
+        match crate::config::load(&self.cfg_path) {
             Ok(cfg) => {
                 self.lang_ru = match cfg.ui.language {
                     Language::Ru => true,

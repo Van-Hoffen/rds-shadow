@@ -1629,29 +1629,10 @@ dependencies = [
  "chrono",
  "clap",
  "eframe",
- "rds-shadow-core",
- "serde_json",
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "rds-shadow-audit"
-version = "0.3.1"
-dependencies = [
- "chrono",
- "clap",
- "rds-shadow-core",
- "serde_json",
-]
-
-[[package]]
-name = "rds-shadow-core"
-version = "0.3.1"
-dependencies = [
- "chrono",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

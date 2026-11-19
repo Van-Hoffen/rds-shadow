@@ -7,6 +7,16 @@ Append-only. Do not rewrite old entries.
 - Evidence: skeleton files present
 - Docs: [[STATUS]]
 
+## 2026-11-19 — Один Windows-крейт, отказ от Linux (0006)
+- Changes: слиты `rds-shadow-core` и `rds-shadow-audit` в один `rds-shadow` (модули config/event/filter/writer/command + bin `rds-shadow-audit`); CI и релиз — только Windows; README/ТЗ/STATUS/AGENTS и гайд по релизу обновлены
+- Evidence: `cargo check --target x86_64-pc-windows-gnu --all-targets` ok; `cargo clippy --target x86_64-pc-windows-gnu --all-targets -D warnings` ok; `cargo test` 22 passed; `cargo fmt --check` ok
+- Docs: [[decisions/0006-single-windows-crate]], [[STATUS]]
+
+## 2026-11-19 — Агент consistency-checker
+- Changes: создан subagent `.opencode/agents/consistency-checker.md` — ревизор логической согласованности действий основного агента (противоречия, неподтверждённые факты, смешение понятий, заявлено vs фактически)
+- Evidence: файл создан; запущен аудит недавних утверждений (Linux/shadow, v0.3.1, вьюер)
+- Docs: [[STATUS]]
+
 ## 2026-11-19 — Release v0.3.1
 - Changes: закоммичена вся работа (этап 1 отображения shadow, стандарты интерфейса/плагинов, макеты 01–06 и 07 v1–v6, архив прав, решения 0003–0005); версия поднята до 0.3.1 (v0.3.0 уже был занят редактором прав); тег `v0.3.1` запушил → release workflow запущен
 - Evidence: `git push` ok (main f5e40f1..e66a2b2, new tag v0.3.1); локально `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`, `cargo test --workspace` (22) — зелёные

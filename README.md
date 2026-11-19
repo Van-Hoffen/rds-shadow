@@ -10,10 +10,9 @@
 
 | Крейт | Платформа | Назначение |
 |---|---|---|
-| `rds-shadow-core` | любая | INI-конфиг, события аудита, JSONL, фильтры, аргументы `mstsc` |
 | `rds-shadow` | Windows 10/11 | GUI: список сеансов, shadow, сообщение, logoff, журнал |
 | `rds-shadow-cli` | Windows 10/11 | те же действия из командной строки |
-| `rds-shadow-audit` | Windows, Linux | просмотр JSONL, фильтры, CSV |
+| `rds-shadow-audit` | Windows 10/11 | просмотр JSONL, фильтры, CSV |
 
 Допуск делает Windows. Программа не хранит пароли, не обходит согласие сотрудника и не включает кнопки, если группа не задана в конфиге.
 
@@ -34,7 +33,7 @@ cargo test --workspace
 cargo build --workspace --release
 ```
 
-Кроссплатформенная часть проверяется на Linux. Windows-клиент:
+Сборка только под Windows. Локально на Linux-машине разработки можно кросс-проверить компиляцию (без запуска):
 
 ```bash
 rustup target add x86_64-pc-windows-gnu
@@ -62,7 +61,7 @@ rds-shadow-audit --dir ./logs --since 2026-11-18T00:00:00Z --csv
 
 ## Релиз
 
-Тег `vX.Y.Z` запускает `.github/workflows/release.yml`: сборка Windows-клиента и просмотрщика, Linux-просмотрщика, проверка версии, GitHub Release с артефактами. Версия в `[workspace.package]` должна совпадать с тегом.
+Тег `vX.Y.Z` запускает `.github/workflows/release.yml`: сборка Windows-клиента (GUI + CLI + просмотрщик), проверка версии, GitHub Release. Версия в `[workspace.package]` должна совпадать с тегом.
 
 ## Ограничения v1
 

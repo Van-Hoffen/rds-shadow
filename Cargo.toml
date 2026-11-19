@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/rds-shadow-core",
-    "crates/rds-shadow-audit",
     "crates/rds-shadow",
 ]
 

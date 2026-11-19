@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::config::Config;
+use crate::event::{ActionMode, AuditEvent, EventKind, ResultKind};
 use clap::{Parser, Subcommand};
-use rds_shadow_core::config::Config;
-use rds_shadow_core::event::{ActionMode, AuditEvent, EventKind, ResultKind};
 
 use crate::audit;
 use crate::platform;
@@ -72,7 +72,7 @@ enum Cmd {
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let mut cfg = rds_shadow_core::config::load(&cli.config)?;
+    let mut cfg = crate::config::load(&cli.config)?;
     if let Some(broker) = cli.broker {
         cfg.connection.broker = Some(broker);
     }

@@ -16,6 +16,7 @@
 | [[decisions/0003-ui-and-plugin-standard]] | adopt depesha UI standard and plugin model |
 | [[decisions/0004-archive-rdp-tcp-rights-editor]] | RDP-Tcp rights editor archived, out of product |
 | [[decisions/0005-shadow-viewer-wgc]] | shadow multi-monitor: own WGC viewer, zoom/pan |
+| [[decisions/0006-single-windows-crate]] | collapsed to one Windows crate, dropped Linux |
 | [[guides/release]] | how to cut a release |
 | [[guides/deployment-ad-gpo]] | AD groups, GPO consent, rights requirements (mechanics in archive) |
 | sessions/ | session notes |

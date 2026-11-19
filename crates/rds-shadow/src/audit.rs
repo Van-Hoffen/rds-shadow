@@ -1,6 +1,6 @@
-use rds_shadow_core::config::Config;
-use rds_shadow_core::event::{ActionMode, AuditEvent, EventKind, ResultKind};
-use rds_shadow_core::writer::JsonlWriter;
+use crate::config::Config;
+use crate::event::{ActionMode, AuditEvent, EventKind, ResultKind};
+use crate::writer::JsonlWriter;
 
 use crate::platform;
 

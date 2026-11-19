@@ -166,7 +166,7 @@ Expert Rust developer mastering Rust 1.75+ features, advanced type system usage,
 
 - Follow `rds-shadow-domain` skill and `docs/architecture/tz-v1-draft.md`.
 - No consent bypass, no hardcoded hosts or group names.
-- Shadow client is Windows-only; viewer is Windows + Linux.
+- Shadow client and viewer are Windows-only.
 - v1 audit is JSONL files only.
 
 ## Example Interactions

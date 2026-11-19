@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
 use clap::Parser;
-use rds_shadow_core::event::{AuditEvent, EventKind, ResultKind};
-use rds_shadow_core::filter::EventFilter;
+use rds_shadow::event::{AuditEvent, EventKind, ResultKind};
+use rds_shadow::filter::EventFilter;
 
 /// Read-only viewer for RDS Shadow JSONL audit files.
 ///
